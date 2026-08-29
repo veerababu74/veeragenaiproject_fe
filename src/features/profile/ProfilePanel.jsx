@@ -1,13 +1,23 @@
-import { useState } from 'react'
-import { ArrowRight, Camera, Link2, LockKeyhole, MapPin, Phone, UserRound } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { GoogleLogin } from '@react-oauth/google'
+import { AlertTriangle, ArrowRight, Camera, Link2, LockKeyhole, MapPin, Phone, Trash2, UserRound } from 'lucide-react'
 import { api } from '../../lib/api'
 import './ProfilePanel.css'
 
-export default function ProfilePanel({ user, onUserChange }) {
+export default function ProfilePanel({ user, onUserChange, onAccountDeleted }) {
   const [form, setForm] = useState({ password: '', currentPassword: '' })
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const deleteDialog = useRef(null)
+
+  useEffect(() => {
+    if (deleteOpen && !deleteDialog.current?.open) deleteDialog.current?.showModal()
+  }, [deleteOpen])
 
   function update(event) {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
@@ -65,6 +75,39 @@ export default function ProfilePanel({ user, onUserChange }) {
     }
   }
 
+  function closeDeleteDialog() {
+    setDeleteOpen(false)
+    setDeletePassword('')
+    setDeleteError('')
+  }
+
+  async function deleteWithPassword(event) {
+    event.preventDefault()
+    setDeleteBusy(true)
+    setDeleteError('')
+    try {
+      await api('/auth/me', { method: 'DELETE', body: JSON.stringify({ password: deletePassword }) })
+      onAccountDeleted()
+    } catch (requestError) {
+      setDeleteError(requestError.message)
+    } finally {
+      setDeleteBusy(false)
+    }
+  }
+
+  async function deleteWithGoogle(result) {
+    setDeleteBusy(true)
+    setDeleteError('')
+    try {
+      await api('/auth/me', { method: 'DELETE', body: JSON.stringify({ credential: result.credential }) })
+      onAccountDeleted()
+    } catch (requestError) {
+      setDeleteError(requestError.message)
+    } finally {
+      setDeleteBusy(false)
+    }
+  }
+
   return <>
     <div className="profile-heading">
       <div className="avatar">
@@ -95,5 +138,31 @@ export default function ProfilePanel({ user, onUserChange }) {
       {notice && <p className="message success">{notice}</p>}
       <button className="primary-button" disabled={busy}>{busy ? 'Updating...' : 'Update profile'}<ArrowRight size={18} /></button>
     </form>
+
+    <div className="danger-zone">
+      <div><strong>Delete account</strong><p>Permanently remove your account, chats, documents, and connections. This cannot be undone.</p></div>
+      <button className="danger-button" onClick={() => setDeleteOpen(true)}><Trash2 size={16} /> Delete account</button>
+    </div>
+
+    {deleteOpen && <dialog ref={deleteDialog} className="delete-account-dialog" onCancel={closeDeleteDialog} aria-labelledby="delete-account-title">
+      <div className="delete-dialog-icon"><AlertTriangle size={22} /></div>
+      <h2 id="delete-account-title">Delete your account?</h2>
+      <p>This permanently deletes your profile, chat history, RAG documents, and Google Workspace connection. This cannot be undone.</p>
+      {user.provider === 'email' ? <form onSubmit={deleteWithPassword}>
+        <label>Confirm your password<div className="input-wrap"><LockKeyhole size={18} /><input type="password" value={deletePassword} onChange={(event) => setDeletePassword(event.target.value)} autoFocus required /></div></label>
+        {deleteError && <p className="message error" role="alert">{deleteError}</p>}
+        <div className="delete-dialog-actions">
+          <button type="button" onClick={closeDeleteDialog}>Cancel</button>
+          <button type="submit" className="danger-button" disabled={deleteBusy || !deletePassword}>{deleteBusy ? 'Deleting...' : 'Delete account'}</button>
+        </div>
+      </form> : <>
+        <p className="provider-note">Sign in with Google again to confirm it's you.</p>
+        {deleteError && <p className="message error" role="alert">{deleteError}</p>}
+        <div className="google-button"><GoogleLogin onSuccess={deleteWithGoogle} onError={() => setDeleteError('Google verification failed')} width="320" /></div>
+        <div className="delete-dialog-actions">
+          <button type="button" onClick={closeDeleteDialog}>Cancel</button>
+        </div>
+      </>}
+    </dialog>}
   </>
 }

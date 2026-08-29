@@ -69,6 +69,11 @@ function App() {
     navigate('/', { replace: true })
   }
 
+  async function accountDeleted() {
+    setUser(null)
+    navigate('/', { replace: true })
+  }
+
   async function createAccountFromDemo() {
     await api('/auth/logout', { method: 'POST' })
     setUser(null)
@@ -115,7 +120,7 @@ function App() {
     {mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
     <section className={`workspace-content ${allowedWorkspaceView === 'profile' ? 'profile-content' : ''}`}>
       {allowedWorkspaceView === 'projects' && <ProjectsPanel user={user} openProject={workspaceProject} onOpenProject={(projectId) => navigate(`/projects/${projectId}`)} onCloseProject={() => navigate('/projects')} onCreateAccount={createAccountFromDemo} />}
-      {allowedWorkspaceView === 'profile' && <ProfilePanel user={user} onUserChange={setUser} />}
+      {allowedWorkspaceView === 'profile' && <ProfilePanel user={user} onUserChange={setUser} onAccountDeleted={accountDeleted} />}
       {allowedWorkspaceView === 'admin' && <AdminPanel currentUser={user} />}
     </section>
   </main>
