@@ -1,0 +1,21 @@
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
+.tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 12px; color: var(--muted); font-weight: 600; }
+.tabs button.active { color: var(--royal); border-color: var(--royal); }
+.otp-input { height: 60px; background: var(--white); border: 1px solid var(--line); border-radius: 6px; text-align: center; font: 700 26px 'Manrope'; letter-spacing: 12px; padding-left: 12px; }
+.otp-input:focus { border-color: var(--royal); box-shadow: 0 0 0 3px rgba(46,76,245,.1); }
+.divider { display: flex; align-items: center; gap: 12px; color: #929ab2; font-size: 12px; margin: 24px 0 18px; }
+.divider::before, .divider::after { content: ''; height: 1px; background: var(--line); flex: 1; }
+.google-button { min-height: 44px; display: grid; place-items: center; overflow: hidden; }
+.google-disabled { width: min(100%, 320px); height: 42px; border: 1px solid var(--line); border-radius: 4px; background: var(--white); color: var(--muted); cursor: not-allowed; }
+.provider-note { color: var(--muted); text-align: center; font-size: 12px; line-height: 1.5; margin: 16px 0 0; }
+.demo-credentials { margin: 0 0 18px; padding: 14px; border: 1px solid rgba(46, 76, 245, .24); border-radius: 8px; background: var(--ice); color: var(--ink); }
+.demo-credentials > div { display: grid; gap: 3px; }
+.demo-credentials > div span { color: var(--muted); font-size: 12px; }
+.demo-credentials dl { display: grid; gap: 6px; margin: 12px 0; }
+.demo-credentials dl div { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.demo-credentials dt { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+.demo-credentials dd { margin: 0; overflow-wrap: anywhere; font: 600 12px/1.4 monospace; }
+.demo-credentials button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.verify-actions { margin-top: 20px; display: flex; justify-content: space-between; }
+.forgot-link { display: block; margin: 12px 0 0 auto; }
+.back-link { display: block; margin: 18px auto 0; }
