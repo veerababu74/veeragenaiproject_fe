@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = import.meta.env.DEV
+  ? import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  : '/api'
 
 export async function api(path, options = {}) {
   const isFormData = options.body instanceof FormData
