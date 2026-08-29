@@ -15,6 +15,8 @@ const STRATEGIES = {
   fixed: 'Fixed', recursive: 'Recursive', 'content-aware': 'Content-aware', semantic: 'Semantic',
 }
 const looksLikeApiKey = (value) => /^(gsk_|sk-|sk_|AIza)/i.test(value.trim())
+const MAX_DOCUMENT_STORAGE = 5 * 1024 * 1024
+const formatMegabytes = (bytes) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 const PIPELINE_STEPS = ['Rephrasing the question', 'Generating search queries', 'Retrieving chunks for each query', 'Checking context quality', 'Building final LLM context', 'Generating grounded answer']
 const documentForm = (file, strategy, chunkSize, overlap, embeddingKey, embeddingModel) => {
   const body = new FormData()
@@ -60,12 +62,14 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
   const [busy, setBusy] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [pipelineStep, setPipelineStep] = useState(0)
+  const [storage, setStorage] = useState({ used: 0, limit: MAX_DOCUMENT_STORAGE, remaining: MAX_DOCUMENT_STORAGE })
   const messageEnd = useRef(null)
   const deleteDialog = useRef(null)
   const openInitialSession = useEffectEvent((id) => openSession(id))
 
   useEffect(() => {
-    api(`${endpoint}/sessions`).then(async (items) => {
+    Promise.all([api(`${endpoint}/sessions`), api(`${endpoint}/storage`)]).then(async ([items, usage]) => {
+      setStorage(usage)
       setSessions(items)
       if (items[0]) await openInitialSession(items[0].id)
     }).catch((requestError) => setError(requestError.message))
@@ -123,6 +127,10 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
     return created.id
   }
 
+  async function refreshStorage() {
+    setStorage(await api(`${endpoint}/storage`))
+  }
+
   async function newSession() {
     resetWorkspace()
     try { await createSession() } catch (requestError) { setError(requestError.message) }
@@ -151,6 +159,7 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
     setBusy('delete-session')
     try {
       await api(`${endpoint}/sessions/${sessionId}`, { method: 'DELETE' })
+      await refreshStorage()
       const remaining = sessions.filter((item) => item.id !== sessionId)
       setSessions(remaining)
       resetWorkspace()
@@ -169,6 +178,7 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
 
   async function uploadDocument() {
     if (!selectedFile || busy) return
+    if (selectedFile.size > storage.remaining) { setError(`Only ${formatMegabytes(storage.remaining)} of the 5 MB document allowance remains`); return }
     if (!embeddingKey.trim()) { setError('Enter your Google Gemini embedding API key'); return }
     setBusy('upload')
     setError('')
@@ -177,6 +187,7 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
       const document = await api(`${endpoint}/sessions/${activeSession}/documents`, {
         method: 'POST', body: documentForm(selectedFile, strategy, chunkSize, overlap, embeddingKey, embeddingModel),
       })
+      await refreshStorage()
       setDocuments((current) => [document, ...current])
       setPreview({ filename: document.filename, chunks: document.chunks.map((chunk) => chunk.content), overlap: document.overlap })
       setSelectedFile(null)
@@ -188,6 +199,7 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
     setBusy(documentId)
     try {
       await api(`${endpoint}/documents/${documentId}`, { method: 'DELETE' })
+      await refreshStorage()
       setDocuments((current) => current.filter((item) => item.id !== documentId))
       setDeleteTarget(null)
     } catch (requestError) { setError(requestError.message) } finally { setBusy('') }
@@ -243,7 +255,7 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
       </div>
     </header>
 
-    <div className="privacy-notice"><KeyRound size={16} /><span>Originals use private storage. Provider and embedding keys are request-only and never saved.</span></div>
+    <div className="privacy-notice"><KeyRound size={16} /><span>Chats are kept for 24 hours after the last interaction. Provider and embedding keys are never saved.</span></div>
 
     <div className="chat-layout rag-layout">
       <aside className="chat-sidebar rag-sidebar">
@@ -262,6 +274,7 @@ export default function BasicRag({ onBack, endpoint = '/basic-rag', title = 'Bas
         </div>
 
         <label className="rag-upload"><Upload size={17} /><span>{selectedFile?.name || 'Choose PDF, DOCX, or TXT'}</span><input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" onChange={(event) => { setSelectedFile(event.target.files?.[0] || null); setPreview(null) }} /></label>
+        <p className="storage-usage"><span>{formatMegabytes(storage.remaining)} remaining</span><span>{formatMegabytes(storage.used)} used of 5 MB</span></p>
         <button className="index-button" disabled={!selectedFile || !preview || busy} onClick={uploadDocument}>{busy === 'upload' ? 'Indexing...' : 'Add to knowledge base'}</button>
 
         <div className="session-heading"><span>DOCUMENTS</span><small>{documents.length}</small></div>

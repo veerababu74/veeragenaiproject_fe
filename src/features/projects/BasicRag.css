@@ -13,6 +13,8 @@
 .rag-upload { min-height: 62px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 9px; padding: 10px; border: 1px dashed #aebcf0; border-radius: 6px; background: var(--ice); color: #42517d; cursor: pointer; font-size: 11px; font-weight: 700; }
 .rag-upload span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rag-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.storage-usage { display: flex; justify-content: space-between; margin: -9px 2px 0; color: var(--muted); font-size: 9px; }
+.storage-usage span:first-child { color: var(--royal); font-weight: 800; }
 .index-button { min-height: 40px; border: 0; border-radius: 6px; background: var(--royal); color: var(--white); font-weight: 800; }
 .index-button:disabled { opacity: .45; }
 .document-list { display: grid; gap: 5px; }
