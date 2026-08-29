@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useState } from 'react'
 import {
+  ArrowLeft,
   ArrowRight,
   Bot,
   BrainCircuit,
@@ -11,6 +12,7 @@ import {
   Eye,
   ExternalLink,
   Layers3,
+  Search,
   Sparkles,
   Star,
   Workflow,
@@ -26,12 +28,16 @@ const ICONS = {
   chart: ChartNoAxesCombined,
   workflow: Workflow,
 }
+const PAGE_SIZE = 4
 
 export default function LandingPage({ onLogin, onRegister, onNavigate }) {
   const [content, setContent] = useState(null)
   const [slide, setSlide] = useState(0)
   const [category, setCategory] = useState('All')
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
   const deferredCategory = useDeferredValue(category)
+  const deferredQuery = useDeferredValue(query)
 
   useEffect(() => {
     Promise.all([api('/landing'), api('/portfolio')]).then(([landing, catalog]) => setContent({
@@ -55,7 +61,15 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
   const activeSlide = content.hero_slides[slide]
   const moveSlide = (direction) => setSlide((slide + direction + content.hero_slides.length) % content.hero_slides.length)
   const categories = ['All', ...new Set(content.portfolio_projects.map((project) => project.category))]
-  const projects = deferredCategory === 'All' ? content.portfolio_projects : content.portfolio_projects.filter((project) => project.category === deferredCategory)
+  const normalizedQuery = deferredQuery.trim().toLowerCase()
+  const projects = content.portfolio_projects.filter((project) => {
+    if (deferredCategory !== 'All' && project.category !== deferredCategory) return false
+    if (!normalizedQuery) return true
+    return [project.title, project.summary, project.category, ...project.tags].some((value) => value.toLowerCase().includes(normalizedQuery))
+  })
+  const pageCount = Math.max(1, Math.ceil(projects.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const visibleProjects = projects.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   function internalAction(url) {
     if (url === '#signin' || url === '/login') return onLogin
@@ -115,11 +129,14 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
         <div><p>{content.portfolio_eyebrow}</p><h2>{content.portfolio_title}</h2></div>
         <span>{content.portfolio_description}</span>
       </header>
-      <div className="portfolio-filters" aria-label="Filter projects by category">
-        {categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item === 'All' && <Layers3 size={15} />}{item}</button>)}
+      <div className="portfolio-browse-tools">
+        <div className="portfolio-filters" aria-label="Filter projects by category">
+          {categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => { setCategory(item); setPage(1) }}>{item === 'All' && <Layers3 size={15} />}{item}</button>)}
+        </div>
+        <label className="portfolio-search"><Search size={17} /><input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Search projects" aria-label="Search projects" /></label>
       </div>
-      <div className="portfolio-grid" key={deferredCategory}>
-        {projects.map((project) => <article className={`portfolio-card ${project.featured ? 'featured' : ''}`} key={project.id}>
+      <div className="portfolio-grid" key={`${deferredCategory}-${currentPage}`}>
+        {visibleProjects.map((project) => <article className={`portfolio-card ${project.featured ? 'featured' : ''}`} key={project.id}>
           <div className="portfolio-media"><img src={project.image_url} alt={project.image_alt} loading="lazy" />{project.featured && <span className="featured-label"><Star size={13} /> Featured</span>}</div>
           <div className="portfolio-copy">
             <div className="portfolio-meta"><span>{project.category}</span><small className={project.status}>{project.status.replace('-', ' ')}</small></div>
@@ -130,6 +147,12 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
           </div>
         </article>)}
       </div>
+      {projects.length > 0 && <nav className="portfolio-pagination" aria-label="Project pages">
+        <button onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} title="Previous page"><ArrowLeft size={16} /> Previous</button>
+        <span>Page <strong>{currentPage}</strong> of {pageCount} · {projects.length} projects</span>
+        <button onClick={() => setPage(currentPage + 1)} disabled={currentPage === pageCount} title="Next page">Next <ArrowRight size={16} /></button>
+      </nav>}
+      {projects.length === 0 && <div className="portfolio-empty"><Search size={26} /><h3>No matching projects</h3><p>Try another search or category.</p></div>}
     </section>
 
     <section className="landing-section capabilities-section" id="capabilities">
