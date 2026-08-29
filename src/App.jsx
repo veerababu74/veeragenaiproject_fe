@@ -22,7 +22,7 @@ function App() {
   const [authView, setAuthView] = useState('login')
 
   useEffect(() => {
-    api('/auth/session').then(setUser).catch(() => {})
+    api('/auth/session').then(setUser).catch(() => setUser(null))
   }, [])
 
   useEffect(() => {
