@@ -10,9 +10,9 @@
 .landing-auth-actions button { min-height: 42px; padding: 0 15px; border: 0; border-radius: 6px; background: transparent; color: var(--white); font-weight: 700; }
 .landing-auth-actions .landing-register { display: flex; align-items: center; gap: 8px; background: var(--white); color: var(--royal); }
 .landing-hero { position: relative; height: min(840px, 88svh); min-height: 650px; display: flex; align-items: center; padding: 120px max(28px, calc((100vw - 1180px) / 2)) 70px; overflow: hidden; background: #101427; }
-.landing-hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: hero-image-in .8s ease both; }
+.landing-hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .landing-hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,14,32,.92) 0%, rgba(16,26,64,.72) 48%, rgba(16,26,64,.18) 78%), linear-gradient(0deg, rgba(10,14,32,.35), transparent 50%); }
-.landing-hero-content { position: relative; z-index: 1; width: min(720px, 72vw); animation: landing-reveal .55s ease; }
+.landing-hero-content { position: relative; z-index: 1; width: min(720px, 72vw); }
 .landing-announcement { width: fit-content; display: flex; align-items: center; gap: 8px; margin: 0 0 34px; padding: 8px 11px; border: 1px solid rgba(255,255,255,.28); border-radius: 5px; background: rgba(255,255,255,.08); color: #f2f4ff; font-size: 12px; font-weight: 700; }
 .landing-kicker, .landing-section-heading p, .roadmap-heading > p { margin: 0 0 14px; color: #aebaff; font-size: 11px; font-weight: 800; }
 .landing-hero h1 { max-width: 710px; margin: 0; color: var(--white); font: 700 clamp(42px, 6vw, 76px)/1.03 'Manrope', sans-serif; letter-spacing: 0; }
@@ -41,7 +41,7 @@
 .portfolio-filters { min-height: 42px; display: flex; flex-wrap: wrap; gap: 8px; margin: 36px 0 24px; }
 .portfolio-filters button { height: 38px; display: flex; align-items: center; gap: 7px; padding: 0 14px; border: 1px solid #d5dcf4; border-radius: 5px; background: var(--white); color: var(--muted); font-size: 12px; font-weight: 800; }
 .portfolio-filters button:hover, .portfolio-filters button.active { border-color: var(--royal); background: var(--royal); color: var(--white); }
-.portfolio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; animation: portfolio-in .42s ease both; }
+.portfolio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .portfolio-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--white); box-shadow: 0 12px 34px rgba(26,26,46,.07); transition: transform .3s ease, box-shadow .3s ease; }
 .portfolio-card:hover { transform: translateY(-6px); box-shadow: 0 23px 48px rgba(26,26,46,.13); }
 .portfolio-card.featured { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(330px, .82fr); }
@@ -106,10 +106,6 @@
 .footer-copyright { grid-column: 1 / -1; margin: 28px 0 0; padding-top: 24px; border-top: 1px solid #292e46; color: #858da8; font-size: 11px; }
 .public-back { margin-bottom: 20px; }
 
-@keyframes landing-reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes hero-image-in { from { opacity: 0; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
-@keyframes portfolio-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
 @media (max-width: 850px) {
   .landing-nav { grid-template-columns: 1fr auto; }
   .landing-nav-links { display: none; }
@@ -160,6 +156,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-hero-content, .landing-hero-image, .portfolio-grid { animation: none; }
   .capability-card, .portfolio-card, .portfolio-media img { transition: none; }
 }
