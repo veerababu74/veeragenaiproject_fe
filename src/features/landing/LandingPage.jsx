@@ -83,7 +83,7 @@ function LandingBlogBlock({ block }) {
   }
 }
 
-export default function LandingPage({ onLogin, onRegister, onNavigate }) {
+export default function LandingPage({ authenticated = false, onLogin, onRegister, onOpenWorkspace, onNavigate }) {
 
   const [content, setContent] = useState(null)
   const [contentError, setContentError] = useState('')
@@ -216,8 +216,10 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
         <a className="landing-blog-nav-link" href="#blog"><BookOpen size={14} /> Blog</a>
       </div>
       <div className="landing-auth-actions">
-        <button onClick={onLogin}>{content.login_label}</button>
-        <button className="landing-register" onClick={onRegister}>{content.register_label}<ArrowRight size={16} /></button>
+        {authenticated ? <button className="landing-register" onClick={onOpenWorkspace}>Open workspace<ArrowRight size={16} /></button> : <>
+          <button onClick={onLogin}>{content.login_label}</button>
+          <button className="landing-register" onClick={onRegister}>{content.register_label}<ArrowRight size={16} /></button>
+        </>}
       </div>
     </nav>
 
@@ -230,7 +232,7 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
         <h1>{activeSlide.title}</h1>
         <p className="landing-lead">{activeSlide.description}</p>
         <div className="landing-hero-actions">
-          <button onClick={onRegister}>{content.primary_cta_label}<ArrowRight size={18} /></button>
+          <button onClick={authenticated ? onOpenWorkspace : onRegister}>{authenticated ? 'Open workspace' : content.primary_cta_label}<ArrowRight size={18} /></button>
           <a href="#roadmap">{content.secondary_cta_label}</a>
         </div>
       </div>
@@ -363,7 +365,7 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
 
     <section className="landing-cta">
       <div><Sparkles size={25} /><h2>{content.cta_title}</h2><p>{content.cta_description}</p></div>
-      <button onClick={onRegister}>{content.cta_button_label}<ArrowRight size={18} /></button>
+      <button onClick={authenticated ? onOpenWorkspace : onRegister}>{authenticated ? 'Open workspace' : content.cta_button_label}<ArrowRight size={18} /></button>
     </section>
 
     <footer className="landing-footer">

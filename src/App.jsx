@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, ChevronDown, FolderKanban, LogOut, Menu, ShieldCheck, Sparkles, UserRound, X } from 'lucide-react'
+import { BookOpen, ChevronDown, FolderKanban, House, LogOut, Menu, ShieldCheck, Sparkles, UserRound, X } from 'lucide-react'
 import BrandPanel from './components/BrandPanel'
 import AdminPanel from './features/admin/AdminPanel'
 import AuthPanel from './features/auth/AuthPanel'
@@ -35,14 +35,17 @@ function App() {
         setAuthView(PUBLIC_ROUTES[path])
         setPublicView('auth')
       } else if (PROJECT_ROUTES[path]) {
+        setPublicView('workspace')
         setWorkspaceView('projects')
         setWorkspaceProject(PROJECT_ROUTES[path])
         setWorkspaceBlog(null)
       } else if (blogSlug) {
+        setPublicView('workspace')
         setWorkspaceView('blog')
         setWorkspaceProject(null)
         setWorkspaceBlog(blogSlug)
       } else if (WORKSPACE_ROUTES[path]) {
+        setPublicView('workspace')
         setWorkspaceView(WORKSPACE_ROUTES[path])
         setWorkspaceProject(null)
         setWorkspaceBlog(null)
@@ -100,6 +103,8 @@ function App() {
 
   if (user === undefined) return <main className="session-loading"><Sparkles size={24} /> Veera AI</main>
 
+  if (publicView === 'landing') return <LandingPage authenticated={Boolean(user)} onLogin={() => showAuth('login')} onRegister={() => showAuth('register')} onOpenWorkspace={() => openWorkspace('projects')} onNavigate={navigate} />
+
   if (user) {
     const allowedWorkspaceView = (workspaceView === 'admin' && user.role !== 'admin') || (workspaceView === 'profile' && user.role === 'demo') ? 'projects' : workspaceView
     return <main className="workspace-shell">
@@ -111,6 +116,7 @@ function App() {
       <button className="mobile-menu-toggle" aria-label="Open navigation" aria-expanded={mobileNavOpen} aria-controls="workspace-navigation" onClick={() => setMobileNavOpen(true)}><Menu size={20} /></button>
       <nav id="workspace-navigation" className={mobileNavOpen ? 'mobile-open' : ''} aria-label="Workspace">
         <div className="mobile-nav-head"><span><Sparkles size={18} /> Navigation</span><button aria-label="Close navigation" title="Close sidebar" onClick={() => setMobileNavOpen(false)}><X size={20} strokeWidth={2.5} /></button></div>
+        <button onClick={() => navigate('/')}><House size={17} /> Home</button>
         <button aria-current={allowedWorkspaceView === 'projects' ? 'page' : undefined} className={allowedWorkspaceView === 'projects' ? 'active' : ''} onClick={() => openWorkspace('projects')}><FolderKanban size={17} /> Projects</button>
         <button aria-current={allowedWorkspaceView === 'blog' ? 'page' : undefined} className={allowedWorkspaceView === 'blog' ? 'active' : ''} onClick={() => openWorkspace('blog')}><BookOpen size={17} /> Blog</button>
         {user.role === 'admin' && <button aria-current={allowedWorkspaceView === 'admin' ? 'page' : undefined} className={allowedWorkspaceView === 'admin' ? 'active' : ''} onClick={() => openWorkspace('admin')}><ShieldCheck size={17} /> Admin</button>}
@@ -137,8 +143,6 @@ function App() {
     </section>
   </main>
   }
-
-  if (publicView === 'landing') return <LandingPage onLogin={() => showAuth('login')} onRegister={() => showAuth('register')} onNavigate={navigate} />
 
   return (
     <main className="auth-shell">
