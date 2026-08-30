@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, ExternalLink, FolderKanban, Layers3, LockKeyhole, Search, Sparkles, UserPlus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, FolderKanban, Layers3, LockKeyhole, Search, Sparkles, UserPlus } from 'lucide-react'
 import { api } from '../../lib/api'
 import AdvancedRag from './AdvancedRag'
 import BasicChat from './BasicChat'
@@ -8,9 +8,9 @@ import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
 const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent }
-const PAGE_SIZE = 5
+const PAGE_SIZE = 4
 
-export default function ProjectsPanel({ user, openProject, onOpenProject, onCloseProject, onCreateAccount }) {
+export default function ProjectsPanel({ user, openProject, onOpenProject, onCloseProject, onCreateAccount, onOpenBlog }) {
   const [projects, setProjects] = useState([])
   const [category, setCategory] = useState('All')
   const [query, setQuery] = useState('')
@@ -63,12 +63,15 @@ export default function ProjectsPanel({ user, openProject, onOpenProject, onClos
             <h2>{project.title}</h2>
             <p>{project.summary}</p>
             <div className="project-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-            {canOpen && runnable && <button onClick={() => onOpenProject(project.id)}>Open project <ArrowRight size={17} /></button>}
-            {canOpen && external && <a href={project.project_url} target="_blank" rel="noreferrer">Open project <ExternalLink size={16} /></a>}
-            {project.status === 'coming-soon' && <button disabled><FolderKanban size={16} /> Coming soon</button>}
-            {user.role === 'demo' && project.status !== 'coming-soon' && <button onClick={onCreateAccount}><UserPlus size={16} /> Create account to interact</button>}
-            {project.status !== 'coming-soon' && !hasAccess && <button disabled><LockKeyhole size={16} /> Access required</button>}
-            {user.role !== 'demo' && project.status !== 'coming-soon' && hasAccess && !canOpen && <button disabled><FolderKanban size={16} /> Preview only</button>}
+            <div className="project-card-actions">
+              {project.blog_slug && <button className="project-blog-btn" onClick={() => onOpenBlog && onOpenBlog(project.blog_slug)}><BookOpen size={15} /> Read about this project</button>}
+              {canOpen && runnable && <button onClick={() => onOpenProject(project.id)}>Open project <ArrowRight size={17} /></button>}
+              {canOpen && external && <a href={project.project_url} target="_blank" rel="noreferrer">Open project <ExternalLink size={16} /></a>}
+              {project.status === 'coming-soon' && <button disabled><FolderKanban size={16} /> Coming soon</button>}
+              {user.role === 'demo' && project.status !== 'coming-soon' && <button onClick={onCreateAccount}><UserPlus size={16} /> Create account to interact</button>}
+              {project.status !== 'coming-soon' && !hasAccess && <button disabled><LockKeyhole size={16} /> Access required</button>}
+              {user.role !== 'demo' && project.status !== 'coming-soon' && hasAccess && !canOpen && <button disabled><FolderKanban size={16} /> Preview only</button>}
+            </div>
           </div>
         </article>
       })}

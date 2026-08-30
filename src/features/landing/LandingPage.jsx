@@ -1,7 +1,8 @@
-import { useDeferredValue, useEffect, useState } from 'react'
+import { useDeferredValue, useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   Bot,
   BrainCircuit,
   ChartNoAxesCombined,
@@ -30,14 +31,75 @@ const ICONS = {
 }
 const PAGE_SIZE = 4
 
+/* Simple inline block renderer for the landing page blog overlay */
+function LandingBlogBlock({ block }) {
+  const mermaidRef = useRef(null)
+  useEffect(() => {
+    if (block.type !== 'mermaid' || !mermaidRef.current) return
+    let cancelled = false
+    import('mermaid').then((mod) => {
+      const m = mod.default
+      m.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' })
+      m.render(`m-${Math.random().toString(36).slice(2)}`, block.content).then(({ svg }) => {
+        if (!cancelled && mermaidRef.current) mermaidRef.current.innerHTML = svg
+      }).catch(() => {})
+    })
+    return () => { cancelled = true }
+  }, [block])
+
+  switch (block.type) {
+    case 'heading1': return <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f0f0f0', margin: '2rem 0 0.5rem' }}>{block.content}</h2>
+    case 'heading2': return <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#e5e7eb', margin: '1.5rem 0 0.4rem' }}>{block.content}</h3>
+    case 'heading3': return <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#d1d5db', margin: '1.2rem 0 0.3rem' }}>{block.content}</h4>
+    case 'paragraph': return <p style={{ fontSize: '1rem', lineHeight: 1.75, color: '#c9d0da', marginBottom: '1.25rem' }}>{block.content}</p>
+    case 'image': return (
+      <figure style={{ margin: '1.5rem 0' }}>
+        <img src={block.url} alt={block.alt || ''} style={{ width: '100%', borderRadius: 10, display: 'block' }} />
+        {block.caption && <figcaption style={{ textAlign: 'center', fontSize: '0.82rem', color: '#6b7280', marginTop: '0.5rem' }}>{block.caption}</figcaption>}
+      </figure>
+    )
+    case 'mermaid': return (
+      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '1.5rem', textAlign: 'center', overflowX: 'auto', margin: '1.25rem 0' }}
+        ref={mermaidRef} />
+    )
+    case 'code': return (
+      <div style={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, overflow: 'hidden', margin: '1.25rem 0' }}>
+        {block.language && <span style={{ display: 'block', padding: '0.4rem 1rem', fontSize: '0.72rem', fontWeight: 700, color: '#7c6af7', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{block.language}</span>}
+        <pre style={{ margin: 0, padding: '1rem', overflowX: 'auto' }}><code style={{ fontFamily: 'monospace', fontSize: '0.88rem', color: '#e2e8f0' }}>{block.content}</code></pre>
+      </div>
+    )
+    case 'table': return (
+      <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', margin: '1.25rem 0' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+          <thead><tr>{block.headers?.map((h, i) => <th key={i} style={{ background: 'rgba(124,106,247,0.12)', color: '#e2e8f0', fontWeight: 700, padding: '0.65rem 1rem', textAlign: 'left' }}>{h}</th>)}</tr></thead>
+          <tbody>{block.rows?.map((row, ri) => <tr key={ri}>{row.cells.map((cell, ci) => <td key={ci} style={{ padding: '0.55rem 1rem', color: '#c9d0da', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{cell}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+    )
+    case 'bullet-list': return <ul style={{ color: '#c9d0da', lineHeight: 1.75, paddingLeft: '1.5rem', margin: '0.75rem 0 1.25rem' }}>{block.items?.map((item, i) => <li key={i} style={{ marginBottom: '0.3rem' }}>{item}</li>)}</ul>
+    case 'numbered-list': return <ol style={{ color: '#c9d0da', lineHeight: 1.75, paddingLeft: '1.5rem', margin: '0.75rem 0 1.25rem' }}>{block.items?.map((item, i) => <li key={i} style={{ marginBottom: '0.3rem' }}>{item}</li>)}</ol>
+    case 'divider': return <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: '2rem 0' }} />
+    default: return null
+  }
+}
+
 export default function LandingPage({ onLogin, onRegister, onNavigate }) {
+
   const [content, setContent] = useState(null)
   const [slide, setSlide] = useState(0)
   const [category, setCategory] = useState('All')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [blogPosts, setBlogPosts] = useState([])
+  const [blogPage, setBlogPage] = useState(1)
+  const [blogTotalPages, setBlogTotalPages] = useState(1)
+  const [blogQuery, setBlogQuery] = useState('')
+  const [openBlogSlug, setOpenBlogSlug] = useState(null)
+  const [blogPost, setBlogPost] = useState(null)
+  const [blogLoading, setBlogLoading] = useState(false)
   const deferredCategory = useDeferredValue(category)
   const deferredQuery = useDeferredValue(query)
+  const deferredBlogQuery = useDeferredValue(blogQuery)
 
   useEffect(() => {
     Promise.all([api('/landing'), api('/portfolio')]).then(([landing, catalog]) => setContent({
@@ -50,11 +112,30 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
     })).catch(() => {})
   }, [])
 
+  // Fetch public blog posts
+  useEffect(() => {
+    const search = deferredBlogQuery.trim()
+    api(`/blogs?page=${blogPage}&page_size=4${search ? `&search=${encodeURIComponent(search)}` : ''}`)
+      .then((data) => { setBlogPosts(data.posts); setBlogTotalPages(data.total_pages) })
+      .catch(() => {})
+  }, [blogPage, deferredBlogQuery])
+
+  // Load single blog post when slug is set
+  useEffect(() => {
+    if (!openBlogSlug) { setBlogPost(null); return }
+    setBlogLoading(true)
+    api(`/blogs/${openBlogSlug}`)
+      .then(setBlogPost)
+      .catch(() => setOpenBlogSlug(null))
+      .finally(() => setBlogLoading(false))
+  }, [openBlogSlug])
+
   useEffect(() => {
     if (!content || content.hero_slides.length < 2) return undefined
     const timer = window.setInterval(() => setSlide((current) => (current + 1) % content.hero_slides.length), 7000)
     return () => window.clearInterval(timer)
   }, [content])
+
 
   if (!content) return <main className="landing-loading"><Sparkles size={26} /> Veera AI</main>
 
@@ -86,12 +167,41 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
   }
 
   return <main className="landing-page">
+    {/* Blog reader overlay */}
+    {openBlogSlug && (
+      <div className="landing-blog-reader-overlay">
+        <div className="landing-blog-reader-topbar">
+          <button className="landing-blog-back-btn" onClick={() => setOpenBlogSlug(null)}>
+            <ArrowLeft size={15} /> Back to site
+          </button>
+          <span className="landing-blog-reader-title">{blogPost?.title || 'Loading…'}</span>
+        </div>
+        {blogLoading && <div className="landing-blog-loading"><BookOpen size={28} /><span>Loading…</span></div>}
+        {blogPost && (
+          <>
+            {blogPost.cover_image_url && <img className="landing-blog-cover" src={blogPost.cover_image_url} alt={blogPost.cover_image_alt || blogPost.title} />}
+            <article className="landing-blog-content">
+              {blogPost.tags?.length > 0 && (
+                <div className="landing-blog-meta">
+                  {blogPost.tags.map((tag) => <span className="landing-blog-tag" key={tag}>{tag}</span>)}
+                </div>
+              )}
+              <h1 className="landing-blog-post-title">{blogPost.title}</h1>
+              {blogPost.description && <p className="landing-blog-post-desc">{blogPost.description}</p>}
+              {blogPost.blocks?.map((block, i) => <LandingBlogBlock key={i} block={block} />)}
+            </article>
+          </>
+        )}
+      </div>
+    )}
+
     <nav className="landing-nav" aria-label="Public navigation">
       <a className="landing-brand" href="#top"><span><CircuitBoard size={21} /></span>{content.brand_name}</a>
       <div className="landing-nav-links">
         <a href="#projects">{content.portfolio_nav_label}</a>
         <a href="#capabilities">{content.capabilities_nav_label}</a>
         <a href="#roadmap">{content.roadmap_nav_label}</a>
+        <a className="landing-blog-nav-link" href="#blog"><BookOpen size={14} /> Blog</a>
       </div>
       <div className="landing-auth-actions">
         <button onClick={onLogin}>{content.login_label}</button>
@@ -143,7 +253,14 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
             <h3>{project.title}</h3>
             <p>{project.summary}</p>
             <div className="portfolio-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-            {linkedControl(project.project_url, 'View project')}
+            <div className="portfolio-actions">
+              {project.blog_slug && (
+                <button className="landing-project-blog-btn" onClick={() => setOpenBlogSlug(project.blog_slug)}>
+                  <BookOpen size={14} /> Read about this project
+                </button>
+              )}
+              {linkedControl(project.project_url, 'View project')}
+            </div>
           </div>
         </article>)}
       </div>
@@ -184,6 +301,52 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
           </article>)}
         </div>
       </div>
+    </section>
+
+    {/* Blog section */}
+    <section className="landing-section landing-blog-section" id="blog">
+      <header className="landing-section-heading">
+        <div><p>BLOG &amp; INSIGHTS</p><h2>Project deep-dives &amp; technical write-ups</h2></div>
+        <span>Detailed breakdowns of the architecture, decisions, and logic inside each project — with diagrams and code.</span>
+      </header>
+      <label className="landing-blog-search">
+        <Search size={18} />
+        <input
+          type="search"
+          value={blogQuery}
+          onChange={(event) => { setBlogQuery(event.target.value); setBlogPage(1) }}
+          placeholder="Search posts by topic, technology, or title"
+          aria-label="Search public blog posts"
+        />
+      </label>
+      {blogPosts.length > 0 ? (
+        <>
+          <div className="landing-blog-grid">
+            {blogPosts.map((post) => (
+              <article className="landing-blog-card" key={post.slug} onClick={() => setOpenBlogSlug(post.slug)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setOpenBlogSlug(post.slug)}>
+                {post.cover_image_url
+                  ? <img className="landing-blog-card-cover" src={post.cover_image_url} alt={post.cover_image_alt || post.title} loading="lazy" />
+                  : <div className="landing-blog-card-cover-ph"><BookOpen size={28} /></div>}
+                <div className="landing-blog-card-body">
+                  {post.tags?.length > 0 && <div className="landing-blog-card-tags">{post.tags.map((t) => <span key={t}>{t}</span>)}</div>}
+                  <h3>{post.title}</h3>
+                  <p>{post.description}</p>
+                  <button className="landing-blog-card-read">Read post <ArrowRight size={13} /></button>
+                </div>
+              </article>
+            ))}
+          </div>
+          {blogTotalPages > 1 && (
+            <nav className="landing-blog-pagination">
+              <button onClick={() => setBlogPage(blogPage - 1)} disabled={blogPage === 1}><ArrowLeft size={15} /> Previous</button>
+              <span>Page <strong>{blogPage}</strong> of {blogTotalPages}</span>
+              <button onClick={() => setBlogPage(blogPage + 1)} disabled={blogPage === blogTotalPages}>Next <ArrowRight size={15} /></button>
+            </nav>
+          )}
+        </>
+      ) : (
+        <div className="landing-blog-empty"><BookOpen size={28} /><p>{blogQuery.trim() ? 'No posts match your search.' : 'No blog posts yet — check back soon.'}</p></div>
+      )}
     </section>
 
     <section className="landing-cta">

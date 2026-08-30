@@ -36,8 +36,9 @@
 .project-card p { margin: 0; color: var(--muted); line-height: 1.6; }
 .project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 22px; }
 .project-tags span { padding: 6px 8px; border-radius: 4px; background: var(--ice); color: #4e5b82; font-size: 10px; font-weight: 700; }
-.project-card-body > button, .project-card-body > a { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; padding: 0 17px; border: 0; border-radius: 6px; background: var(--royal); color: var(--white); font-weight: 700; text-decoration: none; }
-.project-card-body > button:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+.project-card-actions { width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: auto; }
+.project-card-actions > button, .project-card-actions > a { min-width: 0; min-height: 44px; flex: 1 1 220px; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 0 17px; border: 1px solid var(--royal); border-radius: 6px; background: var(--royal); color: var(--white); font-weight: 700; text-decoration: none; }
+.project-card-actions > button:disabled { border-color: var(--line); background: var(--line); color: var(--muted); cursor: not-allowed; }
 .projects-error { padding: 12px 14px; border: 1px solid #f4c9ce; background: #fff0f1; color: #9f2434; }
 .projects-empty { display: grid; place-items: center; min-height: 280px; padding: 30px; border: 1px dashed #c8d1ee; background: var(--white); text-align: center; }
 .projects-empty svg { color: var(--royal); }
@@ -136,9 +137,24 @@
   .workspace-filters button { flex: 0 0 auto; }
   .project-pagination { gap: 8px; }
   .project-pagination button { width: 38px; padding: 0; justify-content: center; font-size: 0; }
+  .project-card-actions { align-items: stretch; flex-direction: column; }
+  .project-card-actions > button, .project-card-actions > a { width: 100%; }
   .chat-header { grid-template-columns: auto minmax(0, 1fr); }
   .new-chat-button { grid-column: 1 / -1; justify-content: center; }
   .privacy-notice { align-items: flex-start; }
+}
+
+/* Blog link button on project cards */
+.project-blog-btn {
+  border-color: #aebaff !important;
+  background: var(--white) !important;
+  color: var(--royal) !important;
+  font-size: 12px;
+}
+
+.project-blog-btn:hover {
+  background: var(--ice) !important;
+  border-color: var(--royal) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

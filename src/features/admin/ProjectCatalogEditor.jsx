@@ -104,6 +104,7 @@ export default function ProjectCatalogEditor() {
           <Field label="Image alt text" value={project.image_alt} onChange={(value) => updateProject(index, 'image_alt', value)} />
           <label>Display order<input type="number" min="0" max="999" value={project.display_order} onChange={(event) => updateProject(index, 'display_order', Number(event.target.value))} /></label>
           <Field label="Project URL, path, or anchor" value={project.project_url} onChange={(value) => updateProject(index, 'project_url', value)} />
+          <Field label="Linked blog slug (optional)" value={project.blog_slug || ''} onChange={(value) => updateProject(index, 'blog_slug', value || null)} />
         </div>
         <div className="project-switches">
           <label><input type="checkbox" checked={project.show_workspace} onChange={(event) => updateProject(index, 'show_workspace', event.target.checked)} /><span>Show after login on Projects page</span></label>

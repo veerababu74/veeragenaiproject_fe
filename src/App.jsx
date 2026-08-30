@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, FolderKanban, LogOut, Menu, ShieldCheck, Sparkles, UserRound, X } from 'lucide-react'
+import { BookOpen, ChevronDown, FolderKanban, LogOut, Menu, ShieldCheck, Sparkles, UserRound, X } from 'lucide-react'
 import BrandPanel from './components/BrandPanel'
 import AdminPanel from './features/admin/AdminPanel'
 import AuthPanel from './features/auth/AuthPanel'
+import BlogPanel from './features/blog/BlogPanel'
 import LandingPage from './features/landing/LandingPage'
 import ProfilePanel from './features/profile/ProfilePanel'
 import ProjectsPanel from './features/projects/ProjectsPanel'
@@ -10,13 +11,14 @@ import { api } from './lib/api'
 import './App.css'
 
 const PUBLIC_ROUTES = { '/login': 'login', '/register': 'register' }
-const WORKSPACE_ROUTES = { '/projects': 'projects', '/admin': 'admin', '/profile': 'profile' }
+const WORKSPACE_ROUTES = { '/projects': 'projects', '/admin': 'admin', '/profile': 'profile', '/blog': 'blog' }
 const PROJECT_ROUTES = { '/projects/basic-chat': 'basic-chat', '/projects/basic-rag': 'basic-rag', '/projects/advanced-rag': 'advanced-rag', '/projects/google-workspace-agent': 'google-workspace-agent' }
 
 function App() {
   const [user, setUser] = useState(undefined)
   const [workspaceView, setWorkspaceView] = useState('projects')
   const [workspaceProject, setWorkspaceProject] = useState(null)
+  const [workspaceBlog, setWorkspaceBlog] = useState(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [publicView, setPublicView] = useState('landing')
   const [authView, setAuthView] = useState('login')
@@ -28,20 +30,28 @@ function App() {
   useEffect(() => {
     function syncViewWithPath() {
       const path = window.location.pathname.replace(/\/$/, '') || '/'
+      const blogSlug = path.match(/^\/blog\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)?.[1]
       if (PUBLIC_ROUTES[path]) {
         setAuthView(PUBLIC_ROUTES[path])
         setPublicView('auth')
       } else if (PROJECT_ROUTES[path]) {
         setWorkspaceView('projects')
         setWorkspaceProject(PROJECT_ROUTES[path])
+        setWorkspaceBlog(null)
+      } else if (blogSlug) {
+        setWorkspaceView('blog')
+        setWorkspaceProject(null)
+        setWorkspaceBlog(blogSlug)
       } else if (WORKSPACE_ROUTES[path]) {
         setWorkspaceView(WORKSPACE_ROUTES[path])
         setWorkspaceProject(null)
+        setWorkspaceBlog(null)
       } else {
         if (path !== '/') window.history.replaceState({}, '', '/')
         setPublicView('landing')
         setWorkspaceView('projects')
         setWorkspaceProject(null)
+        setWorkspaceBlog(null)
       }
       setMobileNavOpen(false)
     }
@@ -54,7 +64,7 @@ function App() {
   useEffect(() => {
     if (user === undefined) return
     const path = window.location.pathname.replace(/\/$/, '') || '/'
-    if (!user && (WORKSPACE_ROUTES[path] || PROJECT_ROUTES[path])) navigate('/login', { replace: true })
+    if (!user && (WORKSPACE_ROUTES[path] || PROJECT_ROUTES[path] || path.startsWith('/blog/'))) navigate('/login', { replace: true })
     if (user && PUBLIC_ROUTES[path]) navigate('/projects', { replace: true })
   }, [user])
 
@@ -102,6 +112,7 @@ function App() {
       <nav id="workspace-navigation" className={mobileNavOpen ? 'mobile-open' : ''} aria-label="Workspace">
         <div className="mobile-nav-head"><span><Sparkles size={18} /> Navigation</span><button aria-label="Close navigation" title="Close sidebar" onClick={() => setMobileNavOpen(false)}><X size={20} strokeWidth={2.5} /></button></div>
         <button aria-current={allowedWorkspaceView === 'projects' ? 'page' : undefined} className={allowedWorkspaceView === 'projects' ? 'active' : ''} onClick={() => openWorkspace('projects')}><FolderKanban size={17} /> Projects</button>
+        <button aria-current={allowedWorkspaceView === 'blog' ? 'page' : undefined} className={allowedWorkspaceView === 'blog' ? 'active' : ''} onClick={() => openWorkspace('blog')}><BookOpen size={17} /> Blog</button>
         {user.role === 'admin' && <button aria-current={allowedWorkspaceView === 'admin' ? 'page' : undefined} className={allowedWorkspaceView === 'admin' ? 'active' : ''} onClick={() => openWorkspace('admin')}><ShieldCheck size={17} /> Admin</button>}
       </nav>
       <details className="nav-account">
@@ -119,7 +130,8 @@ function App() {
     </header>
     {mobileNavOpen && <button className="mobile-nav-backdrop" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
     <section className={`workspace-content ${allowedWorkspaceView === 'profile' ? 'profile-content' : ''}`}>
-      {allowedWorkspaceView === 'projects' && <ProjectsPanel user={user} openProject={workspaceProject} onOpenProject={(projectId) => navigate(`/projects/${projectId}`)} onCloseProject={() => navigate('/projects')} onCreateAccount={createAccountFromDemo} />}
+      {allowedWorkspaceView === 'projects' && <ProjectsPanel user={user} openProject={workspaceProject} onOpenProject={(projectId) => navigate(`/projects/${projectId}`)} onCloseProject={() => navigate('/projects')} onCreateAccount={createAccountFromDemo} onOpenBlog={(slug) => navigate(`/blog/${slug}`)} />}
+      {allowedWorkspaceView === 'blog' && <BlogPanel key={workspaceBlog || 'blog-index'} initialSlug={workspaceBlog} onNavigate={navigate} />}
       {allowedWorkspaceView === 'profile' && <ProfilePanel user={user} onUserChange={setUser} onAccountDeleted={accountDeleted} />}
       {allowedWorkspaceView === 'admin' && <AdminPanel currentUser={user} />}
     </section>

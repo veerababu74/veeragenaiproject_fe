@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { FolderKanban, FolderKey, LayoutTemplate, Search, ShieldCheck, Users } from 'lucide-react'
+import { BookOpen, FolderKanban, FolderKey, LayoutTemplate, Search, ShieldCheck, Users } from 'lucide-react'
 import { api } from '../../lib/api'
+import BlogEditor from './BlogEditor'
 import LandingEditor from './LandingEditor'
 import ProjectCatalogEditor from './ProjectCatalogEditor'
 import './AdminPanel.css'
@@ -44,8 +45,9 @@ export default function AdminPanel({ currentUser }) {
       <button className={view === 'users' ? 'active' : ''} onClick={() => setView('users')}><Users size={17} /> User access</button>
       <button className={view === 'projects' ? 'active' : ''} onClick={() => setView('projects')}><FolderKanban size={17} /> Project catalog</button>
       <button className={view === 'landing' ? 'active' : ''} onClick={() => setView('landing')}><LayoutTemplate size={17} /> Landing content</button>
+      <button className={view === 'blog' ? 'active' : ''} onClick={() => setView('blog')}><BookOpen size={17} /> Blog posts</button>
     </div>
-    {view === 'landing' ? <LandingEditor /> : view === 'projects' ? <ProjectCatalogEditor /> : <>
+    {view === 'landing' ? <LandingEditor /> : view === 'projects' ? <ProjectCatalogEditor /> : view === 'blog' ? <BlogEditor /> : <>
     <div className="admin-heading">
       <div><span>ADMINISTRATION</span><h2>User access</h2><p>{users.length} registered users</p></div>
       <ShieldCheck size={30} />
