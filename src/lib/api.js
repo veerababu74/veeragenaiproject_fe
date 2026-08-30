@@ -10,9 +10,12 @@ export async function api(path, options = {}) {
       credentials: 'include',
       headers: { ...(isFormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers },
       ...options,
+      signal: options.signal ?? AbortSignal.timeout(15000),
     })
   } catch (networkErr) {
-    // Backend is down or network unreachable
+    if (networkErr.name === 'TimeoutError') {
+      throw new Error('The server took too long to respond. Please try again.')
+    }
     throw new Error('Cannot reach the server. Please make sure the backend is running.')
   }
 
@@ -40,4 +43,4 @@ export async function api(path, options = {}) {
   }
 
   return data
-}
+}

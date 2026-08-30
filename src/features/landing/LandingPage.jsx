@@ -86,6 +86,7 @@ function LandingBlogBlock({ block }) {
 export default function LandingPage({ onLogin, onRegister, onNavigate }) {
 
   const [content, setContent] = useState(null)
+  const [contentError, setContentError] = useState('')
   const [slide, setSlide] = useState(0)
   const [category, setCategory] = useState('All')
   const [query, setQuery] = useState('')
@@ -102,14 +103,16 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
   const deferredBlogQuery = useDeferredValue(blogQuery)
 
   useEffect(() => {
-    Promise.all([api('/landing'), api('/portfolio')]).then(([landing, catalog]) => setContent({
-      ...landing,
-      portfolio_nav_label: catalog.nav_label,
-      portfolio_eyebrow: catalog.eyebrow,
-      portfolio_title: catalog.title,
-      portfolio_description: catalog.description,
-      portfolio_projects: catalog.projects,
-    })).catch(() => {})
+    Promise.all([api('/landing'), api('/portfolio')])
+      .then(([landing, catalog]) => setContent({
+        ...landing,
+        portfolio_nav_label: catalog.nav_label,
+        portfolio_eyebrow: catalog.eyebrow,
+        portfolio_title: catalog.title,
+        portfolio_description: catalog.description,
+        portfolio_projects: catalog.projects,
+      }))
+      .catch((error) => setContentError(error.message))
   }, [])
 
   // Fetch public blog posts
@@ -136,6 +139,15 @@ export default function LandingPage({ onLogin, onRegister, onNavigate }) {
     return () => window.clearInterval(timer)
   }, [content])
 
+
+  if (contentError) return (
+    <main className="landing-error">
+      <Sparkles size={26} />
+      <h1>Veera AI is temporarily unavailable</h1>
+      <p>{contentError}</p>
+      <button onClick={() => window.location.reload()}>Try again</button>
+    </main>
+  )
 
   if (!content) return <main className="landing-loading"><Sparkles size={26} /> Veera AI</main>
 
