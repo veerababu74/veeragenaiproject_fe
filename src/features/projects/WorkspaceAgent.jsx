@@ -80,7 +80,7 @@ export default function WorkspaceAgent({ onBack }) {
     }
     setBusy('connect')
     try {
-      const result = await api('/workspace-agent/google/authorize')
+      const result = await api(`/workspace-agent/google/authorize?return_url=${encodeURIComponent(window.location.origin)}`)
       window.location.assign(result.authorization_url)
     } catch (requestError) { setError(requestError.message); setBusy('') }
   }

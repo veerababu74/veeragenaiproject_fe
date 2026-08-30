@@ -152,7 +152,7 @@ function TableBlockEditor({ block, onChange }) {
   return (
     <div className="blog-block-item-body blog-table-editor">
       <div>
-        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', margin: '0 0 0.4rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Headers</p>
+        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0 0 0.4rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Headers</p>
         <div className="blog-table-headers">
           {block.headers.map((h, i) => (
             <div key={i} style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
@@ -164,7 +164,7 @@ function TableBlockEditor({ block, onChange }) {
         </div>
       </div>
       <div>
-        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', margin: '0 0 0.4rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rows</p>
+        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0 0 0.4rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rows</p>
         {(block.rows || []).map((row, ri) => (
           <div key={ri} className="blog-table-row" style={{ marginBottom: '0.35rem' }}>
             {row.cells.map((cell, ci) => (
@@ -188,7 +188,7 @@ function ListBlockEditor({ block, onChange }) {
     <div className="blog-block-item-body blog-list-editor">
       {block.items.map((item, i) => (
         <div key={i} className="blog-list-item-row">
-          <span style={{ fontSize: '0.75rem', color: '#7c6af7', minWidth: 20 }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--royal)', minWidth: 20 }}>
             {block.type === 'numbered-list' ? `${i + 1}.` : '•'}
           </span>
           <input value={item} onChange={(e) => updateItem(i, e.target.value)} placeholder={`Item ${i + 1}`} />
@@ -227,7 +227,7 @@ function BlockItem({ block, index, total, onChange, onMove, onDelete, onUploadIm
     if (block.type === 'bullet-list' || block.type === 'numbered-list')
       return <ListBlockEditor block={block} onChange={onChange} />
     if (block.type === 'divider')
-      return <div className="blog-block-item-body" style={{ padding: '0.5rem 0.75rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>— Horizontal rule —</div>
+      return <div className="blog-block-item-body" style={{ padding: '0.5rem 0.75rem', color: 'var(--muted)', fontSize: '0.8rem' }}>— Horizontal rule —</div>
     return null
   }
 
@@ -494,7 +494,7 @@ export default function BlogEditor() {
             </button>
           ))}
           {!posts.length && (
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', padding: '1rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', padding: '1rem', textAlign: 'center' }}>
               No posts yet. Create one →
             </p>
           )}
@@ -506,8 +506,8 @@ export default function BlogEditor() {
         {/* Toolbar */}
         <div className="blog-editor-toolbar">
           <div className="blog-editor-toolbar-left">
-            <BookOpen size={18} style={{ color: '#7c6af7' }} />
-            <strong style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>
+            <BookOpen size={18} style={{ color: 'var(--royal)' }} />
+            <strong style={{ fontSize: '0.9rem', color: 'var(--navy)' }}>
               {draft ? draft.title : 'Select or create a post'}
             </strong>
           </div>
@@ -605,7 +605,7 @@ export default function BlogEditor() {
 
                 {/* Cover image */}
                 <div className="full-width blog-cover-section">
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
                     Cover image
                     <input
                       value={draft.cover_image_url || ''}
@@ -628,7 +628,7 @@ export default function BlogEditor() {
                   </label>
                 </div>
 
-                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   Cover image alt text
                   <input
                     value={draft.cover_image_alt || ''}
@@ -673,7 +673,7 @@ export default function BlogEditor() {
                 ))}
 
                 {draft.blocks.length === 0 && (
-                  <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '0.85rem', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)', fontSize: '0.85rem', border: '1px dashed var(--line)', borderRadius: 8 }}>
                     Use the toolbar above to add content blocks
                   </div>
                 )}
