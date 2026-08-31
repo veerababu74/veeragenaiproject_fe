@@ -1,8 +1,6 @@
-const rawBase = import.meta.env.DEV
-  ? import.meta.env.VITE_CHUNKING_API_URL || 'http://localhost:8001'
-  : import.meta.env.VITE_CHUNKING_API_URL || '/chunking-api'
-
-const CHUNKING_API_URL = (rawBase || '').replace(/\/+$/, '')
+const CHUNKING_API_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_CHUNKING_API_URL || 'http://localhost:8001').replace(/\/+$/, '')
+  : '/chunking-api'
 
 export async function chunkingApi(path, options = {}) {
   const isFormData = options.body instanceof FormData
