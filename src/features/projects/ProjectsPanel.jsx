@@ -4,10 +4,12 @@ import { api } from '../../lib/api'
 import AdvancedRag from './AdvancedRag'
 import BasicChat from './BasicChat'
 import BasicRag from './BasicRag'
+import ChunkingLab from './ChunkingLab'
+import GraphRag from './GraphRag'
 import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
-const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent }
+const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag }
 const PAGE_SIZE = 4
 
 export default function ProjectsPanel({ user, openProject, onOpenProject, onCloseProject, onCreateAccount, onOpenBlog }) {

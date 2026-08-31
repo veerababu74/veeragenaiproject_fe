@@ -1,0 +1,935 @@
+.graph-rag {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--ice);
+  color: var(--navy);
+}
+
+/* ── Header ── */
+.gr-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.4rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.gr-back,
+.gr-session-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gr-back:hover,
+.gr-session-btn:hover,
+.gr-session-btn.active {
+  border-color: var(--royal);
+  color: var(--royal);
+}
+
+.gr-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.gr-title-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--royal), var(--periwinkle));
+}
+
+.gr-title h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.gr-title p {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.gr-rel {
+  position: relative;
+}
+
+.gr-session-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 300px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(26, 26, 46, 0.14);
+  padding: 0.4rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.gr-session-empty {
+  margin: 0;
+  padding: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.gr-session-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 9px;
+  cursor: pointer;
+  color: var(--periwinkle);
+}
+
+.gr-session-item:hover,
+.gr-session-item.active {
+  background: var(--ice);
+}
+
+.gr-session-item div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gr-session-item strong {
+  font-size: 0.82rem;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-session-item span {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.gr-session-item button,
+.gr-doc button,
+.gr-file button {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.gr-session-item button:hover,
+.gr-doc button:hover,
+.gr-file button:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.gr-session-new {
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.55rem;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  background: none;
+  color: var(--royal);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+/* ── Status ── */
+.gr-progress {
+  height: 3px;
+  background: linear-gradient(90deg, var(--royal), var(--periwinkle), var(--royal));
+  background-size: 200% 100%;
+  animation: gr-slide 1.1s linear infinite;
+}
+
+@keyframes gr-slide {
+  to { background-position: -200% 0; }
+}
+
+.gr-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 1.4rem 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.83rem;
+}
+
+/* ── Layout ── */
+.gr-body {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.1rem;
+  padding: 1.1rem 1.4rem 2rem;
+  align-items: start;
+}
+
+.gr-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  position: sticky;
+  top: 5rem;
+}
+
+.gr-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.95rem;
+}
+
+.gr-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.gr-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.gr-card input,
+.gr-card select {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--navy);
+  background: var(--white);
+}
+
+.gr-card input:focus,
+.gr-card select:focus {
+  outline: 2px solid rgba(46, 76, 245, 0.25);
+  border-color: var(--royal);
+}
+
+.gr-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.gr-drop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0.2rem;
+  padding: 1.3rem 0.8rem;
+  border: 1.5px dashed var(--line);
+  border-radius: 11px;
+  color: var(--periwinkle);
+  text-align: center;
+  cursor: pointer;
+}
+
+.gr-drop.over {
+  border-color: var(--royal);
+  background: var(--ice);
+}
+
+.gr-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.gr-drop strong {
+  font-size: 0.85rem;
+  color: var(--navy);
+}
+
+.gr-drop span {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.gr-file,
+.gr-doc {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--royal);
+  margin-bottom: 0.5rem;
+}
+
+.gr-file div,
+.gr-doc div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gr-file strong,
+.gr-doc strong {
+  font-size: 0.8rem;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-file span,
+.gr-doc span {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.gr-primary {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.65rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--royal);
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.gr-primary:disabled {
+  background: var(--periwinkle);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.gr-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.gr-stats h2 {
+  grid-column: 1 / -1;
+  margin-bottom: 0.2rem;
+}
+
+.gr-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.55rem 0.2rem;
+  background: var(--ice);
+  border-radius: 10px;
+}
+
+.gr-stats strong {
+  font-size: 1.15rem;
+  color: var(--royal);
+}
+
+.gr-stats span {
+  font-size: 0.66rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Main ── */
+.gr-main {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.gr-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--ice);
+}
+
+.gr-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gr-tabs button.active {
+  background: var(--white);
+  color: var(--royal);
+  box-shadow: 0 1px 4px rgba(26, 26, 46, 0.1);
+}
+
+/* ── Event feed ── */
+.gr-feed {
+  padding: 0.9rem;
+  overflow-y: auto;
+  max-height: 74vh;
+}
+
+.gr-feed-empty,
+.gr-graph-empty {
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  padding: 4rem 1rem;
+  color: var(--periwinkle);
+  text-align: center;
+}
+
+.gr-feed-empty p,
+.gr-graph-empty p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.gr-event {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+  animation: gr-fade 0.25s ease;
+}
+
+@keyframes gr-fade {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+
+.gr-event.error .gr-event-icon {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.gr-event-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--ice);
+  color: var(--royal);
+}
+
+.gr-event-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.gr-event-body header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.gr-event-body header strong {
+  font-size: 0.78rem;
+  text-transform: capitalize;
+  color: var(--navy);
+}
+
+.gr-event-body header span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.gr-chunk-text {
+  margin: 0.45rem 0 0;
+  padding: 0.55rem 0.7rem;
+  background: var(--ice);
+  border-radius: 9px;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: var(--muted);
+  max-height: 6.5rem;
+  overflow: hidden;
+}
+
+.gr-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.gr-pills span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pill) 12%, white);
+  border: 1px solid color-mix(in srgb, var(--pill) 35%, white);
+  color: var(--navy);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.gr-pills small {
+  color: var(--pill);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gr-triples {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gr-triples li {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.gr-triples b {
+  color: var(--navy);
+}
+
+.gr-triples em {
+  color: var(--royal);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.7rem;
+  padding: 0 0.3rem;
+}
+
+.gr-cypher {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--navy);
+  border-radius: 9px;
+  overflow-x: auto;
+}
+
+.gr-cypher code {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: #d7e0ff;
+  white-space: pre;
+}
+
+.gr-stat-row {
+  display: flex;
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.gr-stat-row b {
+  color: var(--royal);
+}
+
+/* ── Tables ── */
+.gr-table-wrap {
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.gr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+}
+
+.gr-table th {
+  background: var(--ice);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+}
+
+.gr-table td {
+  padding: 0.45rem 0.6rem;
+  border-top: 1px solid var(--line);
+  color: var(--navy);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-empty-rows {
+  margin: 0.5rem 0 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+/* ── Graph ── */
+.gr-graph-panel {
+  padding: 0.9rem;
+}
+
+.gr-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.gr-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.gr-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.gr-graph-wrap {
+  position: relative;
+}
+
+.gr-graph {
+  width: 100%;
+  height: auto;
+  background: var(--ice);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.gr-node {
+  cursor: pointer;
+}
+
+.gr-node-label {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--navy);
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+}
+
+.gr-edge-label {
+  font-size: 7px;
+  fill: var(--muted);
+  text-anchor: middle;
+}
+
+.gr-node-card {
+  position: absolute;
+  left: 0.8rem;
+  bottom: 0.8rem;
+  max-width: 280px;
+  padding: 0.6rem 0.75rem;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgba(26, 26, 46, 0.14);
+}
+
+.gr-node-card strong {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.gr-node-card span {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gr-node-card p {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── Ask ── */
+.gr-ask {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.gr-ask-graph {
+  padding: 0.8rem 0.9rem 0;
+}
+
+.gr-conversation {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.9rem;
+  max-height: 40vh;
+}
+
+.gr-message {
+  margin-bottom: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.gr-message.user {
+  background: var(--royal);
+  color: var(--white);
+  margin-left: auto;
+  max-width: 78%;
+}
+
+.gr-message.assistant {
+  background: var(--ice);
+  border: 1px solid var(--line);
+}
+
+.gr-sources,
+.gr-trace {
+  margin-top: 0.5rem;
+  font-size: 0.76rem;
+}
+
+.gr-sources summary,
+.gr-trace summary {
+  cursor: pointer;
+  color: var(--royal);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gr-sources p {
+  margin: 0.45rem 0 0;
+  padding: 0.5rem 0.65rem;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.gr-sources b {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--navy);
+  font-size: 0.72rem;
+}
+
+.gr-trace .gr-feed {
+  max-height: 42vh;
+}
+
+.gr-composer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid var(--line);
+  background: var(--white);
+}
+
+.gr-hops {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.gr-hops select {
+  padding: 0.4rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: inherit;
+  color: var(--navy);
+}
+
+.gr-composer input {
+  flex: 1;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.87rem;
+  font-family: inherit;
+  color: var(--navy);
+}
+
+.gr-composer input:focus {
+  outline: 2px solid rgba(46, 76, 245, 0.25);
+  border-color: var(--royal);
+}
+
+.gr-composer button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  border: none;
+  border-radius: 10px;
+  background: var(--royal);
+  color: var(--white);
+  cursor: pointer;
+}
+
+.gr-composer button:disabled {
+  background: var(--periwinkle);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Cypher gallery ── */
+.gr-cypher-panel {
+  padding: 0.9rem;
+  overflow-y: auto;
+  max-height: 74vh;
+}
+
+.gr-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.7rem;
+}
+
+.gr-template {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: var(--white);
+}
+
+.gr-template h3 {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.gr-template p {
+  margin: 0.3rem 0 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.gr-template button,
+.gr-result h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gr-template button {
+  margin-top: 0.55rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ice);
+  color: var(--royal);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gr-template button:hover:not(:disabled) {
+  border-color: var(--royal);
+}
+
+.gr-result {
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.gr-result h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1000px) {
+  .gr-body {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-sidebar {
+    position: static;
+  }
+}
