@@ -1,8 +1,8 @@
 .graph-rag {
+  width: min(100%, 1200px);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: var(--ice);
   color: var(--navy);
 }
 
@@ -11,12 +11,10 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 1.4rem;
+  padding: 0.85rem 1.1rem;
   background: var(--white);
-  border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  border: 1px solid var(--line);
+  border-radius: 14px;
 }
 
 .gr-back,
@@ -167,6 +165,8 @@
 /* ── Status ── */
 .gr-progress {
   height: 3px;
+  margin-top: 0.6rem;
+  border-radius: 999px;
   background: linear-gradient(90deg, var(--royal), var(--periwinkle), var(--royal));
   background-size: 200% 100%;
   animation: gr-slide 1.1s linear infinite;
@@ -180,7 +180,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0.75rem 1.4rem 0;
+  margin: 0.75rem 0 0;
   padding: 0.7rem 0.9rem;
   border: 1px solid #fecaca;
   border-radius: 10px;
@@ -192,9 +192,9 @@
 /* ── Layout ── */
 .gr-body {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 1.1rem;
-  padding: 1.1rem 1.4rem 2rem;
+  padding: 1.1rem 0 0;
   align-items: start;
 }
 
@@ -203,7 +203,7 @@
   flex-direction: column;
   gap: 0.9rem;
   position: sticky;
-  top: 5rem;
+  top: 1rem;
 }
 
 .gr-card {
@@ -388,7 +388,7 @@
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 14px;
-  min-height: 70vh;
+  min-height: 560px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -424,6 +424,7 @@
 
 /* ── Event feed ── */
 .gr-feed {
+  flex: 1;
   padding: 0.9rem;
   overflow-y: auto;
   max-height: 74vh;
@@ -431,10 +432,13 @@
 
 .gr-feed-empty,
 .gr-graph-empty {
+  flex: 1;
   display: grid;
   place-items: center;
+  align-content: center;
   gap: 0.5rem;
-  padding: 4rem 1rem;
+  min-height: 320px;
+  padding: 2rem 1rem;
   color: var(--periwinkle);
   text-align: center;
 }
@@ -517,6 +521,7 @@
   margin-top: 0.5rem;
 }
 
+/* Tints the pill from the entity-type colour supplied inline as --pill. */
 .gr-pills span {
   display: inline-flex;
   align-items: center;
