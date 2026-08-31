@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/chunking-api/:path*", "destination": "https://veeragenaiproject-be2.vercel.app/:path*" },
     { "source": "/api/:path*", "destination": "https://veeragenaiproject-be.vercel.app/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]

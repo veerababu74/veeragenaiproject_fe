@@ -1,12 +1,16 @@
-const CHUNKING_API_URL = import.meta.env.DEV
+const rawBase = import.meta.env.DEV
   ? import.meta.env.VITE_CHUNKING_API_URL || 'http://localhost:8001'
   : import.meta.env.VITE_CHUNKING_API_URL || '/chunking-api'
 
+const CHUNKING_API_URL = (rawBase || '').replace(/\/+$/, '')
+
 export async function chunkingApi(path, options = {}) {
   const isFormData = options.body instanceof FormData
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const targetUrl = `${CHUNKING_API_URL}${normalizedPath}`
   let response
   try {
-    response = await fetch(`${CHUNKING_API_URL}${path}`, {
+    response = await fetch(targetUrl, {
       credentials: 'include',
       headers: { ...(isFormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers },
       ...options,
