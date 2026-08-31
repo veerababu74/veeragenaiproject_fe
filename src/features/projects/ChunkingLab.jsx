@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, BarChart3, Check, ChevronDown, ChevronUp,
-  Columns2, FileText, Layers, Plus, Scissors, Settings2, SplitSquareVertical,
-  Trash2, Upload, X, Zap
+  AlertTriangle, ArrowLeft, Bot, Check, ChevronDown, ChevronUp,
+  Columns2, FileText, KeyRound, Layers3, Plus, Scissors, Settings2,
+  Sparkles, Trash2, Upload, X, Zap
 } from 'lucide-react'
 import { chunkingApi } from '../../lib/chunkingApi'
 import './ChunkingLab.css'
@@ -21,79 +21,69 @@ const EMBEDDING_MODELS = [
   'text-embedding-004',
 ]
 
-const FILE_TYPE_COLORS = {
-  PDF: { bg: '#ef4444', text: 'white' },
-  DOCX: { bg: '#3b82f6', text: 'white' },
-  PowerPoint: { bg: '#f97316', text: 'white' },
-  CSV: { bg: '#10b981', text: 'white' },
-  Excel: { bg: '#22c55e', text: 'white' },
-  Markdown: { bg: '#a855f7', text: 'white' },
-  Text: { bg: '#64748b', text: 'white' },
-}
-
 const formatBytes = (bytes) => {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
-const formatTime = (ts) => new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ChunkCard({ chunk, color, index }) {
+function ChunkCard({ chunk, index }) {
   const [expanded, setExpanded] = useState(false)
-  const isLong = chunk.content.length > 300
+  const isLong = chunk.content && chunk.content.length > 320
 
   return (
-    <article
-      className="cl-chunk-card"
-      style={{ '--chunk-color': color, '--chunk-index': index }}
-    >
-      <div className="cl-chunk-header">
-        <span className="cl-chunk-label">Chunk {chunk.index + 1}</span>
-        <div className="cl-chunk-meta">
-          <span><strong>{chunk.char_count.toLocaleString()}</strong> chars</span>
-          <span><strong>{chunk.word_count.toLocaleString()}</strong> words</span>
+    <article className="chunk-result-card" key={chunk.index ?? index}>
+      <header className="chunk-card-header">
+        <strong>Chunk {(chunk.index ?? index) + 1}</strong>
+        <div className="chunk-card-meta">
+          <span><strong>{chunk.char_count?.toLocaleString() || chunk.content?.length || 0}</strong> chars</span>
+          <span><strong>{chunk.word_count?.toLocaleString() || 0}</strong> words</span>
           {chunk.sentence_count != null && <span><strong>{chunk.sentence_count}</strong> sentences</span>}
           {chunk.approx_tokens != null && <span>~<strong>{chunk.approx_tokens}</strong> tokens</span>}
         </div>
-      </div>
-      <div className={`cl-chunk-body ${expanded ? 'expanded' : ''}`}>
+      </header>
+      <div className={`chunk-card-body ${expanded ? 'expanded' : ''}`}>
         {chunk.content}
       </div>
       {isLong && (
-        <button className="cl-chunk-expand" onClick={() => setExpanded(!expanded)}>
-          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          {expanded ? 'Show less' : 'Show more'}
+        <button
+          type="button"
+          className="chunk-card-toggle"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          {expanded ? 'Show less' : 'Show full chunk'}
         </button>
       )}
     </article>
   )
 }
 
-function StatsBar({ stats, color }) {
+function StatsBar({ stats }) {
+  if (!stats) return null
   return (
-    <div className="cl-stats-bar">
-      <div className="cl-stat">
-        <span className="cl-stat-value" style={{ color }}>{stats.count.toLocaleString()}</span>
-        <span className="cl-stat-label">Chunks</span>
+    <div className="chunking-stats-row">
+      <div className="chunking-stat-card">
+        <span className="chunking-stat-num">{stats.count?.toLocaleString() || 0}</span>
+        <span className="chunking-stat-label">Total Chunks</span>
       </div>
-      <div className="cl-stat">
-        <span className="cl-stat-value">{stats.avg_chars.toLocaleString()}</span>
-        <span className="cl-stat-label">Avg chars</span>
+      <div className="chunking-stat-card">
+        <span className="chunking-stat-num">{stats.avg_chars?.toLocaleString() || 0}</span>
+        <span className="chunking-stat-label">Avg Characters</span>
       </div>
-      <div className="cl-stat">
-        <span className="cl-stat-value">{stats.min_chars.toLocaleString()}</span>
-        <span className="cl-stat-label">Min chars</span>
+      <div className="chunking-stat-card">
+        <span className="chunking-stat-num">{stats.min_chars?.toLocaleString() || 0}</span>
+        <span className="chunking-stat-label">Min Characters</span>
       </div>
-      <div className="cl-stat">
-        <span className="cl-stat-value">{stats.max_chars.toLocaleString()}</span>
-        <span className="cl-stat-label">Max chars</span>
+      <div className="chunking-stat-card">
+        <span className="chunking-stat-num">{stats.max_chars?.toLocaleString() || 0}</span>
+        <span className="chunking-stat-label">Max Characters</span>
       </div>
-      <div className="cl-stat">
-        <span className="cl-stat-value">{stats.total_chars.toLocaleString()}</span>
-        <span className="cl-stat-label">Total chars</span>
+      <div className="chunking-stat-card">
+        <span className="chunking-stat-num">{stats.total_chars?.toLocaleString() || 0}</span>
+        <span className="chunking-stat-label">Total Characters</span>
       </div>
     </div>
   )
@@ -103,18 +93,19 @@ function StrategyItem({ id, meta, selected, onToggle }) {
   return (
     <div
       id={`strategy-${id}`}
-      className={`cl-strategy-item ${selected ? 'selected' : ''}`}
-      style={{ '--strategy-color': meta.color }}
+      className={`chunking-strategy-item ${selected ? 'selected' : ''}`}
       onClick={() => onToggle(id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onToggle(id)}
     >
-      <div className="cl-strategy-checkbox">
-        {selected && <Check size={10} strokeWidth={3} color="white" />}
+      <div className="chunking-checkbox">
+        {selected && <Check size={11} strokeWidth={3.5} color="white" />}
       </div>
-      <div className="cl-strategy-dot" />
-      <label htmlFor={`strategy-${id}`}>{meta.label}</label>
-      <div className="cl-strategy-badges">
-        {meta.requires_embedding && <span className="cl-badge embed">Embed</span>}
-        {meta.requires_llm && <span className="cl-badge llm">LLM</span>}
+      <span className="chunking-strategy-label">{meta.label || id}</span>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {meta.requires_embedding && <span className="chunking-strategy-tag embed">Embed</span>}
+        {meta.requires_llm && <span className="chunking-strategy-tag llm">LLM</span>}
       </div>
     </div>
   )
@@ -153,44 +144,46 @@ export default function ChunkingLab({ onBack }) {
   // Sessions
   const [sessions, setSessions] = useState([])
   const [sessionId, setSessionId] = useState(null)
-  const [showSessions, setShowSessions] = useState(false)
 
   // UI state
   const [busy, setBusy] = useState(false)
   const [globalError, setGlobalError] = useState('')
-  const sessionPanelRef = useRef(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const fileInputRef = useRef(null)
+  const deleteDialog = useRef(null)
 
   // ─── Load strategies metadata ─────────────────────────────────────────────
   useEffect(() => {
     chunkingApi('/chunking/strategies')
-      .then((data) => setStrategies(data))
+      .then((data) => {
+        if (Array.isArray(data)) setStrategies(data)
+      })
       .catch(() => setStrategies([]))
   }, [])
 
   // ─── Load sessions ────────────────────────────────────────────────────────
   useEffect(() => {
     chunkingApi('/chunking/sessions')
-      .then(setSessions)
+      .then((items) => {
+        if (Array.isArray(items)) {
+          setSessions(items)
+          if (items[0]) setSessionId(items[0].id)
+        }
+      })
       .catch(() => setSessions([]))
   }, [])
 
-  // ─── Close session panel on outside click ────────────────────────────────
   useEffect(() => {
-    function handleClick(e) {
-      if (sessionPanelRef.current && !sessionPanelRef.current.contains(e.target)) {
-        setShowSessions(false)
-      }
+    if (deleteTarget && !deleteDialog.current?.open) {
+      deleteDialog.current?.showModal()
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  }, [deleteTarget])
 
   // ─── Derived state ────────────────────────────────────────────────────────
   const strategyMeta = Object.fromEntries(strategies.map((s) => [s.id, s]))
   const needsEmbedding = selectedStrategies.some((id) => strategyMeta[id]?.requires_embedding)
   const needsLlm = selectedStrategies.some((id) => strategyMeta[id]?.requires_llm)
-  const canAnalyze = file && selectedStrategies.length > 0 && !busy
+  const canAnalyze = Boolean(file && selectedStrategies.length > 0 && !busy)
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -207,7 +200,7 @@ export default function ChunkingLab({ onBack }) {
   const handleDrop = useCallback((e) => {
     e.preventDefault()
     setDragOver(false)
-    const dropped = e.dataTransfer.files[0]
+    const dropped = e.dataTransfer?.files?.[0]
     if (dropped) handleFile(dropped)
   }, [handleFile])
 
@@ -227,22 +220,25 @@ export default function ChunkingLab({ onBack }) {
   const createSession = useCallback(async () => {
     try {
       const s = await chunkingApi('/chunking/sessions', { method: 'POST' })
-      setSessions((prev) => [s, ...prev])
-      setSessionId(s.id)
-      setShowSessions(false)
-      return s.id
+      if (s?.id) {
+        setSessions((prev) => [s, ...prev.filter((item) => item.id !== s.id)])
+        setSessionId(s.id)
+        return s.id
+      }
+      return null
     } catch (err) {
       setGlobalError(err.message)
       return null
     }
   }, [])
 
-  const deleteSession = useCallback(async (id, e) => {
-    e.stopPropagation()
+  const deleteSession = useCallback(async (id) => {
+    if (!id) return
     try {
       await chunkingApi(`/chunking/sessions/${id}`, { method: 'DELETE' })
       setSessions((prev) => prev.filter((s) => s.id !== id))
       if (sessionId === id) setSessionId(null)
+      setDeleteTarget(null)
     } catch (err) {
       setGlobalError(err.message)
     }
@@ -261,22 +257,28 @@ export default function ChunkingLab({ onBack }) {
       const body = new FormData()
       body.append('file', file)
       body.append('strategies', selectedStrategies.join(','))
-      body.append('chunk_size', chunkSize)
-      body.append('overlap', overlap)
-      body.append('embedding_api_key', embeddingKey)
+      body.append('chunk_size', String(chunkSize))
+      body.append('overlap', String(overlap))
+      body.append('embedding_api_key', embeddingKey.trim())
       body.append('embedding_model', embeddingModel)
       body.append('llm_provider', llmProvider)
-      body.append('llm_api_key', llmApiKey)
-      body.append('llm_model', llmModel)
+      body.append('llm_api_key', llmApiKey.trim())
+      body.append('llm_model', llmModel.trim())
       body.append('session_id', activeSessionId)
       const data = await chunkingApi('/chunking/analyze', { method: 'POST', body })
-      setResults(data.results)
-      setErrors(data.errors || {})
-      setFileInfo({ filename: data.filename, file_type: data.file_type, file_size: data.file_size, char_count: data.char_count })
-      setFileType(data.file_type)
-      // Set active tab to first successful strategy
-      const firstOk = selectedStrategies.find((s) => data.results[s])
-      setActiveTab(firstOk || selectedStrategies[0])
+      if (data) {
+        setResults(data.results || {})
+        setErrors(data.errors || {})
+        setFileInfo({
+          filename: data.filename,
+          file_type: data.file_type,
+          file_size: data.file_size,
+          char_count: data.char_count,
+        })
+        setFileType(data.file_type || '')
+        const firstOk = selectedStrategies.find((s) => data.results?.[s])
+        setActiveTab(firstOk || selectedStrategies[0])
+      }
     } catch (err) {
       setGlobalError(err.message)
     } finally {
@@ -296,97 +298,73 @@ export default function ChunkingLab({ onBack }) {
   const activeResult = results && activeTab ? results[activeTab] : null
   const activeError = errors && activeTab ? errors[activeTab] : null
   const activeMeta = strategyMeta[activeTab] || {}
+  const currentSession = sessions.find((item) => item.id === sessionId)
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="chunking-lab">
-      {/* ── Header ── */}
-      <header className="cl-header">
-        <button id="cl-back-btn" className="cl-back-btn" onClick={onBack}>
-          <ArrowLeft size={16} /> Back
+    <section className="chat-app rag-app chunking-app">
+      {/* ── Top Header ── */}
+      <header className="chat-header rag-header chunking-header">
+        <button className="icon-button" onClick={onBack} title="Back to projects">
+          <ArrowLeft size={20} />
         </button>
-
-        <div className="cl-header-title">
-          <div className="cl-header-icon">
-            <Scissors size={20} color="white" />
-          </div>
-          <div>
-            <h1>Chunking Lab</h1>
-            <p>Visualize document chunking strategies in real time</p>
-          </div>
+        <div>
+          <h1>Chunking Strategy Lab</h1>
+          <p>
+            {fileInfo
+              ? `${fileInfo.filename} · ${fileInfo.char_count?.toLocaleString()} chars · ${resultTabs.length} strategies`
+              : 'Compare 8 document chunking strategies side by side'}
+          </p>
         </div>
-
-        {/* Session picker */}
-        <div className="cl-rel" ref={sessionPanelRef}>
-          <button
-            id="cl-sessions-btn"
-            className={`cl-session-btn ${showSessions ? 'active' : ''}`}
-            onClick={() => setShowSessions(!showSessions)}
-          >
-            <Layers size={15} />
-            {sessionId ? sessions.find((s) => s.id === sessionId)?.title || 'Session' : 'Sessions'}
-            <ChevronDown size={13} />
-          </button>
-
-          {showSessions && (
-            <div className="cl-session-panel">
-              <div className="cl-session-panel-header">
-                <span>Sessions</span>
-                <X size={14} style={{ cursor: 'pointer', color: '#64748b' }} onClick={() => setShowSessions(false)} />
-              </div>
-              {sessions.length === 0 && (
-                <p style={{ padding: '0.75rem 1rem', color: '#64748b', fontSize: '0.8rem', margin: 0 }}>
-                  No sessions yet. Create one to save your analyses.
-                </p>
-              )}
-              {sessions.map((s) => (
-                <div
-                  key={s.id}
-                  className={`cl-session-item ${sessionId === s.id ? 'active' : ''}`}
-                  onClick={() => { setSessionId(s.id); setShowSessions(false) }}
-                >
-                  <FileText size={15} color="#6366f1" />
-                  <div className="cl-session-item-text">
-                    <strong>{s.title}</strong>
-                    <span>{formatTime(s.created_at)}</span>
-                  </div>
-                  <button
-                    className="cl-session-delete"
-                    onClick={(e) => deleteSession(s.id, e)}
-                    title="Delete session"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+        <div className="rag-session-actions">
+          <div className="select-wrap">
+            <select
+              value={sessionId || ''}
+              onChange={(e) => setSessionId(e.target.value || null)}
+              aria-label="Chunking session"
+            >
+              <option value="">Unsaved session</option>
+              {sessions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                </option>
               ))}
-              <button className="cl-session-new-btn" onClick={createSession}>
-                <Plus size={14} /> New session
-              </button>
-            </div>
-          )}
+            </select>
+            <ChevronDown size={16} />
+          </div>
+          <button
+            className="icon-button"
+            onClick={() => setDeleteTarget({ type: 'session', id: sessionId, name: currentSession?.title || 'this session' })}
+            disabled={!sessionId || busy}
+            title="Delete session"
+          >
+            <Trash2 size={17} />
+          </button>
+          <button className="new-chat-button" onClick={createSession} title="New analysis session">
+            <Plus size={17} /> New session
+          </button>
         </div>
       </header>
 
-      {busy && <div className="cl-progress-bar" />}
+      {/* ── Privacy Notice Banner ── */}
+      <div className="privacy-notice">
+        <KeyRound size={16} />
+        <span>Sessions are kept for 24 hours after the last interaction. Provider and embedding API keys are never saved.</span>
+      </div>
 
-      {globalError && (
-        <div className="cl-global-error">
-          <AlertTriangle size={15} /> {globalError}
-        </div>
-      )}
-
-      {/* ── Body ── */}
-      <div className="cl-body">
-        {/* ── Sidebar ── */}
-        <aside className="cl-sidebar">
-          {/* Upload */}
-          <div className="cl-card">
-            <h2 className="cl-card-title"><Upload size={14} /> Document</h2>
+      {/* ── Main Workspace 2-Column Layout ── */}
+      <div className="chat-layout rag-layout chunking-layout">
+        {/* ── Left Sidebar ── */}
+        <aside className="chat-sidebar rag-sidebar chunking-sidebar">
+          {/* 1. Document Upload Card */}
+          <div className="chunking-sidebar-card">
+            <h2 className="chunking-section-title">
+              <Upload size={14} /> Document
+            </h2>
             {!file ? (
-              <div
-                id="cl-upload-zone"
-                className={`cl-upload-zone ${dragOver ? 'drag-over' : ''}`}
+              <label
+                className={`chunking-drop-zone ${dragOver ? 'drag-over' : ''}`}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
@@ -394,41 +372,33 @@ export default function ChunkingLab({ onBack }) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.docx,.pptx,.txt,.md,.csv,.xlsx"
+                  accept=".pdf,.docx,.pptx,.txt,.md,.csv,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/markdown,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   onChange={(e) => handleFile(e.target.files?.[0])}
-                  id="cl-file-input"
+                  style={{ display: 'none' }}
                 />
-                <div className="cl-upload-icon"><Upload size={20} /></div>
-                <h3>Drop your document</h3>
-                <p>or click to browse</p>
-                <div className="cl-file-types">
+                <Upload size={18} />
+                <strong>Choose or drop document</strong>
+                <span>PDF, DOCX, PPTX, TXT, MD, CSV, XLSX</span>
+                <div className="chunking-file-tags">
                   {['PDF', 'DOCX', 'PPTX', 'TXT', 'MD', 'CSV', 'XLSX'].map((t) => (
-                    <span key={t}>{t}</span>
+                    <span className="chunking-file-tag" key={t}>{t}</span>
                   ))}
                 </div>
-              </div>
+              </label>
             ) : (
-              <div className="cl-file-info">
-                <div
-                  className="cl-file-icon"
-                  style={{
-                    background: FILE_TYPE_COLORS[fileType]?.bg || '#6366f1',
-                    color: FILE_TYPE_COLORS[fileType]?.text || 'white',
-                  }}
-                >
-                  {fileType || file.name.split('.').pop().toUpperCase()}
-                </div>
-                <div className="cl-file-info-text">
+              <div className="chunking-active-file">
+                <span className="chunking-file-badge">
+                  {fileType || file.name.split('.').pop()?.toUpperCase()}
+                </span>
+                <div className="chunking-file-meta">
                   <strong title={file.name}>{file.name}</strong>
-                  <span>
-                    {formatBytes(file.size)}
-                    {fileInfo && ` · ${fileInfo.char_count.toLocaleString()} chars`}
-                  </span>
+                  <span>{formatBytes(file.size)}</span>
                 </div>
                 <button
-                  className="cl-file-remove"
+                  type="button"
+                  className="chunking-file-remove"
                   onClick={() => { setFile(null); setResults(null); setFileInfo(null); setActiveTab(null) }}
-                  title="Remove file"
+                  title="Remove document"
                 >
                   <X size={15} />
                 </button>
@@ -436,10 +406,21 @@ export default function ChunkingLab({ onBack }) {
             )}
           </div>
 
-          {/* Strategies */}
-          <div className="cl-card">
-            <h2 className="cl-card-title"><SplitSquareVertical size={14} /> Strategies</h2>
-            <div className="cl-strategies-grid">
+          {/* 2. Strategy Selection */}
+          <div className="chunking-sidebar-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="chunking-section-title">
+                <Scissors size={14} /> Strategies ({selectedStrategies.length})
+              </h2>
+              <button
+                type="button"
+                className="chunking-select-all-btn"
+                onClick={toggleAllStrategies}
+              >
+                {selectedStrategies.length === strategies.length ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+            <div className="chunking-strategy-list">
               {strategies.map((s) => (
                 <StrategyItem
                   key={s.id}
@@ -450,275 +431,244 @@ export default function ChunkingLab({ onBack }) {
                 />
               ))}
             </div>
-            <button className="cl-select-all-btn" onClick={toggleAllStrategies}>
-              {selectedStrategies.length === strategies.length ? 'Deselect all' : 'Select all strategies'}
-            </button>
             {activeTab && strategyMeta[activeTab] && (
-              <p
-                className="cl-description"
-                style={{ '--desc-color': strategyMeta[activeTab].color }}
-              >
-                {strategyMeta[activeTab].description}
+              <p className="chunking-desc-box">
+                <strong>{strategyMeta[activeTab].label}:</strong> {strategyMeta[activeTab].description}
               </p>
             )}
           </div>
 
-          {/* Chunk parameters */}
-          <div className="cl-card">
-            <h2 className="cl-card-title"><Settings2 size={14} /> Parameters</h2>
-            <div className="cl-control-group">
-              <div>
-                <div className="cl-control-label">
-                  Chunk Size <span>{chunkSize.toLocaleString()} chars</span>
-                </div>
-                <input
-                  id="cl-chunk-size"
-                  className="cl-slider"
-                  type="range"
-                  min={100}
-                  max={4000}
-                  step={50}
-                  value={chunkSize}
-                  onChange={(e) => setChunkSize(Number(e.target.value))}
-                />
-              </div>
-              <div>
-                <div className="cl-control-label">
-                  Overlap <span>{overlap.toLocaleString()} chars</span>
-                </div>
-                <input
-                  id="cl-overlap"
-                  className="cl-slider"
-                  type="range"
-                  min={0}
-                  max={Math.floor(chunkSize * 0.5)}
-                  step={10}
-                  value={Math.min(overlap, Math.floor(chunkSize * 0.5))}
-                  onChange={(e) => setOverlap(Number(e.target.value))}
-                />
-              </div>
+          {/* 3. Chunking Parameters */}
+          <div className="chunking-sidebar-card">
+            <h2 className="chunking-section-title">
+              <Settings2 size={14} /> Parameters
+            </h2>
+            <div className="chunking-param-slider">
+              <label>
+                <span>Chunk Size</span>
+                <output>{chunkSize.toLocaleString()} chars</output>
+              </label>
+              <input
+                type="range"
+                min={100}
+                max={4000}
+                step={50}
+                value={chunkSize}
+                onChange={(e) => setChunkSize(Number(e.target.value))}
+              />
+            </div>
+            <div className="chunking-param-slider">
+              <label>
+                <span>Overlap</span>
+                <output>{overlap.toLocaleString()} chars</output>
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={Math.floor(chunkSize * 0.5)}
+                step={10}
+                value={Math.min(overlap, Math.floor(chunkSize * 0.5))}
+                onChange={(e) => setOverlap(Number(e.target.value))}
+              />
             </div>
           </div>
 
-          {/* Embedding config (visible when semantic selected) */}
+          {/* 4. Embedding Key (if semantic selected) */}
           {needsEmbedding && (
-            <div className="cl-card">
-              <h2 className="cl-card-title" style={{ color: '#10b981' }}>
-                <Zap size={14} /> Embedding (Semantic)
+            <div className="chunking-sidebar-card">
+              <h2 className="chunking-section-title" style={{ color: '#0369a1' }}>
+                <Zap size={14} /> Semantic Embedding
               </h2>
-              <div className="cl-control-group">
-                <div>
-                  <div className="cl-control-label">Gemini API Key</div>
+              <div className="chunking-key-inputs">
+                <label>
+                  <span>Gemini API key</span>
                   <input
-                    id="cl-embedding-key"
-                    className="cl-input"
                     type="password"
-                    placeholder="AIza..."
+                    placeholder="AIzaSy..."
                     value={embeddingKey}
                     onChange={(e) => setEmbeddingKey(e.target.value)}
+                    autoComplete="off"
                   />
-                </div>
-                <div>
-                  <div className="cl-control-label">Embedding Model</div>
-                  <select
-                    id="cl-embedding-model"
-                    className="cl-select"
-                    value={embeddingModel}
-                    onChange={(e) => setEmbeddingModel(e.target.value)}
-                  >
-                    {EMBEDDING_MODELS.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
+                </label>
+                <label>
+                  <span>Embedding Model</span>
+                  <div className="select-wrap">
+                    <select
+                      value={embeddingModel}
+                      onChange={(e) => setEmbeddingModel(e.target.value)}
+                    >
+                      {EMBEDDING_MODELS.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} />
+                  </div>
+                </label>
               </div>
             </div>
           )}
 
-          {/* LLM config (visible when agentic selected) */}
+          {/* 5. LLM Config (if agentic selected) */}
           {needsLlm && (
-            <div className="cl-card">
-              <h2 className="cl-card-title" style={{ color: '#ec4899' }}>
-                <Zap size={14} /> LLM (Agentic)
+            <div className="chunking-sidebar-card">
+              <h2 className="chunking-section-title" style={{ color: '#be185d' }}>
+                <Bot size={14} /> Agentic LLM
               </h2>
-              <div className="cl-control-group">
-                <div>
-                  <div className="cl-control-label">Provider</div>
-                  <select
-                    id="cl-llm-provider"
-                    className="cl-select"
-                    value={llmProvider}
-                    onChange={(e) => { setLlmProvider(e.target.value); setLlmModel('') }}
-                  >
-                    {Object.entries(PROVIDERS).map(([id, p]) => (
-                      <option key={id} value={id}>{p.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <div className="cl-control-label">API Key</div>
+              <div className="chunking-key-inputs">
+                <label>
+                  <span>LLM Provider</span>
+                  <div className="select-wrap">
+                    <select
+                      value={llmProvider}
+                      onChange={(e) => { setLlmProvider(e.target.value); setLlmModel('') }}
+                    >
+                      {Object.entries(PROVIDERS).map(([id, p]) => (
+                        <option key={id} value={id}>{p.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} />
+                  </div>
+                </label>
+                <label>
+                  <span>API Key</span>
                   <input
-                    id="cl-llm-key"
-                    className="cl-input"
                     type="password"
-                    placeholder={PROVIDERS[llmProvider]?.defaultModel || 'API key...'}
+                    placeholder="Not saved"
                     value={llmApiKey}
                     onChange={(e) => setLlmApiKey(e.target.value)}
+                    autoComplete="off"
                   />
-                </div>
-                <div>
-                  <div className="cl-control-label">Model (optional)</div>
+                </label>
+                <label>
+                  <span>Model ID (optional)</span>
                   <input
-                    id="cl-llm-model"
-                    className="cl-input"
                     type="text"
                     placeholder={PROVIDERS[llmProvider]?.defaultModel || 'Default model'}
                     value={llmModel}
                     onChange={(e) => setLlmModel(e.target.value)}
                   />
-                </div>
+                </label>
               </div>
             </div>
           )}
 
-          {/* Analyze button */}
+          {/* 6. Primary Action Button */}
           <button
             id="cl-analyze-btn"
-            className="cl-analyze-btn"
+            className="index-button chunking-analyze-btn"
             onClick={analyze}
             disabled={!canAnalyze}
           >
-            {busy ? (
-              <><div className="cl-spinner" /> Analyzing…</>
-            ) : (
-              <><BarChart3 size={17} /> Analyze Document</>
-            )}
+            <Sparkles size={16} />
+            {busy ? 'Analyzing strategies...' : 'Analyze Document'}
           </button>
         </aside>
 
-        {/* ── Results Area ── */}
-        <main className="cl-main">
-          {!results ? (
-            <div className="cl-empty">
-              <div className="cl-empty-graphic">
-                <div className="cl-empty-graphic-ring">
-                  <div className="cl-empty-graphic-inner">
-                    <Scissors size={32} />
-                  </div>
-                </div>
+        {/* ── Right Main Content Area ── */}
+        <main className="rag-main chunking-main">
+          {globalError && (
+            <div className="chunking-strategy-error" style={{ margin: 16 }}>
+              <AlertTriangle size={16} />
+              <div>
+                <strong>Analysis Error</strong>
+                <p>{globalError}</p>
               </div>
+            </div>
+          )}
+
+          {!results ? (
+            <div className="empty-chat" style={{ padding: 40 }}>
+              <div><Layers3 size={32} /></div>
               <h2>Ready to chunk</h2>
               <p>
-                Upload a document, select the chunking strategies you want to compare,
-                then click Analyze to see them in action.
+                Upload a document from the left sidebar, select your preferred strategies,
+                and click <strong>Analyze Document</strong> to view interactive chunks and statistics.
               </p>
-              <div className="cl-empty-steps">
-                <div className="cl-empty-step">
-                  <div className="cl-empty-step-num">1</div>
-                  <span>Upload a PDF, DOCX, CSV, or other file</span>
-                </div>
-                <div className="cl-empty-step">
-                  <div className="cl-empty-step-num">2</div>
-                  <span>Select strategies and set chunk size</span>
-                </div>
-                <div className="cl-empty-step">
-                  <div className="cl-empty-step-num">3</div>
-                  <span>Click Analyze and compare results</span>
-                </div>
-              </div>
             </div>
           ) : (
             <>
-              {/* Tabs */}
-              <div className="cl-tabs-bar">
-                {resultTabs.map((id, i) => {
+              {/* Top Navigation Tabs */}
+              <nav className="rag-tabs chunking-tabs">
+                {resultTabs.map((id) => {
                   const meta = strategyMeta[id] || {}
-                  const hasError = !!errors[id]
+                  const hasError = Boolean(errors[id])
                   const count = results[id]?.stats?.count
                   return (
                     <button
                       key={id}
-                      id={`cl-tab-${id}`}
-                      className={`cl-tab ${activeTab === id ? 'active' : ''} ${hasError ? 'cl-tab-error' : ''}`}
-                      style={{ '--tab-color': meta.color || '#6366f1' }}
+                      className={`chunking-tab-btn ${activeTab === id && !compareMode ? 'active' : ''} ${hasError ? 'error' : ''}`}
                       onClick={() => { setActiveTab(id); setCompareMode(false) }}
                     >
-                      <span className="cl-tab-dot" />
+                      <Layers3 size={14} />
                       {meta.label || id}
-                      {count != null && <span className="cl-tab-count">{count}</span>}
+                      {count != null && <span className="count">{count}</span>}
                       {hasError && <AlertTriangle size={12} />}
                     </button>
                   )
                 })}
-                <div className="cl-tab-separator" />
+
                 <button
-                  id="cl-compare-btn"
-                  className={`cl-compare-btn ${compareMode ? 'active' : ''}`}
+                  className={`chunking-compare-toggle ${compareMode ? 'active' : ''}`}
                   onClick={() => setCompareMode(!compareMode)}
+                  title="Compare all strategies side by side"
                 >
                   <Columns2 size={14} />
-                  {compareMode ? 'Single view' : 'Compare'}
+                  {compareMode ? 'Single view' : 'Side-by-side Compare'}
                 </button>
-              </div>
+              </nav>
 
+              {/* View 1: Compare Mode */}
               {compareMode ? (
-                /* ─── Compare Grid ─── */
-                <div className="cl-compare-grid">
-                  {resultTabs.filter((id) => results[id]).map((id) => {
-                    const meta = strategyMeta[id] || {}
-                    const result = results[id]
-                    return (
-                      <div key={id} className="cl-compare-col">
-                        <div
-                          className="cl-compare-col-header"
-                          style={{ '--col-color': meta.color || '#6366f1' }}
-                        >
-                          <span className="cl-compare-col-dot" />
-                          {meta.label || id}
-                          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#94a3b8' }}>
-                            {result.stats.count} chunks
-                          </span>
+                <div className="chunking-compare-container">
+                  <div className="chunking-compare-row">
+                    {resultTabs.filter((id) => results[id]).map((id) => {
+                      const meta = strategyMeta[id] || {}
+                      const result = results[id]
+                      return (
+                        <div key={id} className="chunking-compare-column">
+                          <div className="chunking-compare-col-header">
+                            <strong>{meta.label || id}</strong>
+                            <span>{result.stats.count} chunks</span>
+                          </div>
+                          {result.chunks.slice(0, 8).map((chunk, idx) => (
+                            <ChunkCard
+                              key={chunk.index ?? idx}
+                              chunk={chunk}
+                              index={chunk.index ?? idx}
+                            />
+                          ))}
+                          {result.chunks.length > 8 && (
+                            <p style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center', margin: 4 }}>
+                              +{result.chunks.length - 8} more chunks (open single view to see all)
+                            </p>
+                          )}
                         </div>
-                        {result.chunks.slice(0, 5).map((chunk) => (
-                          <ChunkCard
-                            key={chunk.index}
-                            chunk={chunk}
-                            color={meta.color || '#6366f1'}
-                            index={chunk.index}
-                          />
-                        ))}
-                        {result.chunks.length > 5 && (
-                          <p style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center', margin: '0.25rem' }}>
-                            +{result.chunks.length - 5} more chunks (switch to single view to see all)
-                          </p>
-                        )}
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
               ) : (
-                /* ─── Single Strategy View ─── */
-                <div className="cl-results">
+                /* View 2: Single Strategy View */
+                <div className="chunking-content-area">
                   {activeError && (
-                    <div className="cl-error-card">
+                    <div className="chunking-strategy-error">
                       <AlertTriangle size={16} />
                       <div>
                         <strong>{activeMeta.label || activeTab} failed</strong>
-                        <p style={{ margin: '0.25rem 0 0', opacity: 0.85 }}>{activeError}</p>
+                        <p>{activeError}</p>
                       </div>
                     </div>
                   )}
 
                   {activeResult && (
                     <>
-                      <StatsBar stats={activeResult.stats} color={activeMeta.color || '#6366f1'} />
-                      <div className="cl-chunks-grid">
-                        {activeResult.chunks.map((chunk) => (
+                      <StatsBar stats={activeResult.stats} />
+                      <div className="chunking-card-list">
+                        {activeResult.chunks.map((chunk, idx) => (
                           <ChunkCard
-                            key={chunk.index}
+                            key={chunk.index ?? idx}
                             chunk={chunk}
-                            color={activeMeta.color || '#6366f1'}
-                            index={chunk.index}
+                            index={chunk.index ?? idx}
                           />
                         ))}
                       </div>
@@ -730,6 +680,33 @@ export default function ChunkingLab({ onBack }) {
           )}
         </main>
       </div>
-    </div>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      {deleteTarget && (
+        <dialog
+          ref={deleteDialog}
+          className="delete-dialog"
+          onCancel={() => setDeleteTarget(null)}
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-description"
+        >
+          <div className="delete-dialog-icon"><AlertTriangle size={22} /></div>
+          <h2 id="delete-dialog-title">Delete {deleteTarget.type}?</h2>
+          <p id="delete-dialog-description">
+            <strong>{deleteTarget.name}</strong> will be permanently removed.
+          </p>
+          <div className="delete-dialog-actions">
+            <button autoFocus onClick={() => setDeleteTarget(null)}>Cancel</button>
+            <button
+              className="danger-button"
+              disabled={Boolean(busy)}
+              onClick={() => deleteSession(deleteTarget.id)}
+            >
+              <Trash2 size={16} /> Delete
+            </button>
+          </div>
+        </dialog>
+      )}
+    </section>
   )
 }
