@@ -185,6 +185,7 @@
   border-radius: 6px;
   background: var(--white);
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   transition: all 0.15s ease;
 }
@@ -493,6 +494,26 @@
   letter-spacing: 0.03em;
 }
 
+.chunking-type-breakdown {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #f8faff;
+  color: var(--navy);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.chunking-type-breakdown svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--royal);
+}
+
 /* Chunk Cards Grid */
 .chunking-card-list {
   display: grid;
@@ -525,6 +546,84 @@
   color: var(--navy);
   font-size: 11px;
   font-weight: 800;
+}
+
+.chunk-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chunk-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: #eef1f8;
+  color: var(--muted);
+}
+
+.chunk-type-badge.table {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.chunk-type-badge.image {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.chunk-result-card.chunk-type-table {
+  border-color: #fde68a;
+}
+
+.chunk-result-card.chunk-type-image {
+  border-color: #ddd6fe;
+}
+
+.chunk-card-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 14px;
+  background: #f8faff;
+  border-bottom: 1px solid var(--line);
+  color: var(--periwinkle, #4b5a8a);
+  font-size: 10.5px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.chunk-card-note svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--royal);
+}
+
+.chunk-card-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 22px 14px;
+  color: #6d28d9;
+  background: #faf9ff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chunk-card-body.is-table {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+  white-space: pre;
+  overflow-x: auto;
 }
 
 .chunk-card-meta {

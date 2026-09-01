@@ -35,6 +35,10 @@ function useForceLayout(nodes, edges, width, height) {
   const [positions, setPositions] = useState({})
   const frame = useRef(0)
   const state = useRef(new Map())
+  const alpha = useRef(1)
+
+  const nodeSignature = nodes.map((node) => node.key).join('|')
+  const edgeSignature = edges.map((edge) => `${edge.source}>${edge.target}:${edge.type}`).join('|')
 
   useEffect(() => {
     if (!nodes.length) {
@@ -44,8 +48,10 @@ function useForceLayout(nodes, edges, width, height) {
     const points = state.current
     const keys = new Set(nodes.map((node) => node.key))
     for (const key of points.keys()) if (!keys.has(key)) points.delete(key)
+    let hasNewNode = false
     nodes.forEach((node, index) => {
       if (!points.has(node.key)) {
+        hasNewNode = true
         const angle = (index / nodes.length) * Math.PI * 2
         points.set(node.key, {
           x: width / 2 + Math.cos(angle) * 140 + Math.random() * 20,
@@ -55,9 +61,15 @@ function useForceLayout(nodes, edges, width, height) {
       }
     })
 
-    let ticks = 0
+    // Reheat instead of resetting: keeps already-settled nodes stable while
+    // giving the simulation enough energy to fold in newly arrived ones.
+    alpha.current = Math.max(alpha.current, hasNewNode ? 0.9 : 0.4)
+    const decay = 1 - Math.pow(0.01, 1 / 300)
+    let safety = 0
+
     const step = () => {
       const list = [...points.entries()]
+      const heat = alpha.current
       for (const [, point] of list) { point.fx = 0; point.fy = 0 }
 
       for (let i = 0; i < list.length; i += 1) {
@@ -68,7 +80,7 @@ function useForceLayout(nodes, edges, width, height) {
           let dy = a.y - b.y
           let distance = Math.hypot(dx, dy) || 0.01
           if (distance < 1) { dx = Math.random(); dy = Math.random(); distance = 1 }
-          const force = 5200 / (distance * distance)
+          const force = (5200 / (distance * distance)) * heat
           a.fx += (dx / distance) * force
           a.fy += (dy / distance) * force
           b.fx -= (dx / distance) * force
@@ -83,7 +95,7 @@ function useForceLayout(nodes, edges, width, height) {
         const dx = b.x - a.x
         const dy = b.y - a.y
         const distance = Math.hypot(dx, dy) || 0.01
-        const force = (distance - 130) * 0.015
+        const force = (distance - 130) * 0.015 * heat
         a.fx += (dx / distance) * force
         a.fy += (dy / distance) * force
         b.fx -= (dx / distance) * force
@@ -100,13 +112,18 @@ function useForceLayout(nodes, edges, width, height) {
       }
 
       setPositions(Object.fromEntries(list.map(([key, point]) => [key, { x: point.x, y: point.y }])))
-      ticks += 1
-      if (ticks < 260) frame.current = requestAnimationFrame(step)
+
+      alpha.current *= 1 - decay
+      safety += 1
+      if (alpha.current > 0.01 && safety < 1500) frame.current = requestAnimationFrame(step)
     }
 
     frame.current = requestAnimationFrame(step)
     return () => cancelAnimationFrame(frame.current)
-  }, [nodes, edges, width, height])
+    // Signatures (not raw arrays) so identical data from a new render doesn't
+    // restart and reheat the simulation for no reason.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeSignature, edgeSignature, width, height])
 
   return positions
 }
@@ -137,10 +154,19 @@ function GraphCanvas({ nodes, edges, emptyLabel }) {
           const b = positions[edge.target]
           if (!a || !b) return null
           const dim = active && edge.source !== active && edge.target !== active
+          const midX = (a.x + b.x) / 2
+          const midY = (a.y + b.y) / 2
+          const labelWidth = edge.type.length * 5.4 + 10
           return (
             <g key={`${edge.source}-${edge.target}-${edge.type}-${index}`} opacity={dim ? 0.15 : 1}>
-              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#b9c4e6" strokeWidth="1.4" markerEnd="url(#gr-arrow)" />
-              <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 4} className="gr-edge-label">{edge.type}</text>
+              <line
+                x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                stroke={active && (edge.source === active || edge.target === active) ? '#2e4cf5' : '#b9c4e6'}
+                strokeWidth={active && (edge.source === active || edge.target === active) ? 2 : 1.4}
+                markerEnd="url(#gr-arrow)"
+              />
+              <rect x={midX - labelWidth / 2} y={midY - 13} width={labelWidth} height={13} rx={4} className="gr-edge-label-bg" />
+              <text x={midX} y={midY - 4} className="gr-edge-label">{edge.type}</text>
             </g>
           )
         })}
@@ -156,7 +182,11 @@ function GraphCanvas({ nodes, edges, emptyLabel }) {
               onMouseEnter={() => setActive(node.key)}
               onMouseLeave={() => setActive(null)}
             >
-              <circle cx={point.x} cy={point.y} r={radius} fill={colorForType(node.type)} stroke="#fff" strokeWidth="2" />
+              <circle
+                cx={point.x} cy={point.y} r={radius}
+                fill={colorForType(node.type)} stroke="#fff" strokeWidth="2"
+                className="gr-node-circle"
+              />
               <text x={point.x} y={point.y - radius - 6} className="gr-node-label">{node.name}</text>
             </g>
           )
@@ -582,7 +612,10 @@ export default function GraphRag({ onBack }) {
               <div className="gr-conversation">
                 {messages.map((message, index) => (
                   <article className={`gr-message ${message.role}`} key={index}>
-                    <MarkdownContent content={message.content} />
+                    <span className="gr-message-role">{message.role === 'assistant' ? 'Graph RAG' : 'You'}</span>
+                    {message.role === 'assistant'
+                      ? <MarkdownContent>{message.content}</MarkdownContent>
+                      : <p className="gr-message-plain">{message.content}</p>}
                     {Boolean(message.sources?.length) && (
                       <details className="gr-sources">
                         <summary>{message.sources.length} cited chunks</summary>

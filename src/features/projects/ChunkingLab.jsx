@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, Bot, Check, ChevronDown, ChevronUp,
-  Columns2, FileText, KeyRound, Layers3, Plus, Scissors, Settings2,
-  Sparkles, Trash2, Upload, X, Zap
+  Columns2, FileText, Image as ImageIcon, Info, KeyRound, Layers3, Plus,
+  Scissors, Settings2, Sparkles, Table2, Trash2, Type, Upload, X, Zap
 } from 'lucide-react'
 import { chunkingApi } from '../../lib/chunkingApi'
 import './ChunkingLab.css'
@@ -29,25 +29,54 @@ const formatBytes = (bytes) => {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+const CHUNK_TYPE_META = {
+  table: { label: 'Table', icon: Table2, className: 'table' },
+  image: { label: 'Image', icon: ImageIcon, className: 'image' },
+  text: { label: 'Text', icon: Type, className: 'text' },
+}
+
 function ChunkCard({ chunk, index }) {
   const [expanded, setExpanded] = useState(false)
   const isLong = chunk.content && chunk.content.length > 320
+  const type = chunk.type || 'text'
+  const typeMeta = CHUNK_TYPE_META[type] || CHUNK_TYPE_META.text
+  const TypeIcon = typeMeta.icon
 
   return (
-    <article className="chunk-result-card" key={chunk.index ?? index}>
+    <article className={`chunk-result-card chunk-type-${typeMeta.className}`} key={chunk.index ?? index}>
       <header className="chunk-card-header">
-        <strong>Chunk {(chunk.index ?? index) + 1}</strong>
+        <div className="chunk-card-title">
+          <strong>Chunk {(chunk.index ?? index) + 1}</strong>
+          <span className={`chunk-type-badge ${typeMeta.className}`}>
+            <TypeIcon size={11} /> {typeMeta.label}
+            {chunk.table_parts > 1 && ` · part ${chunk.table_part}/${chunk.table_parts}`}
+          </span>
+        </div>
         <div className="chunk-card-meta">
           <span><strong>{chunk.char_count?.toLocaleString() || chunk.content?.length || 0}</strong> chars</span>
           <span><strong>{chunk.word_count?.toLocaleString() || 0}</strong> words</span>
           {chunk.sentence_count != null && <span><strong>{chunk.sentence_count}</strong> sentences</span>}
+          {chunk.paragraph_count != null && type === 'text' && <span><strong>{chunk.paragraph_count}</strong> paragraphs</span>}
+          {chunk.row_count != null && <span><strong>{chunk.row_count}</strong> rows</span>}
           {chunk.approx_tokens != null && <span>~<strong>{chunk.approx_tokens}</strong> tokens</span>}
         </div>
       </header>
-      <div className={`chunk-card-body ${expanded ? 'expanded' : ''}`}>
-        {chunk.content}
-      </div>
-      {isLong && (
+      {chunk.note && (
+        <p className="chunk-card-note">
+          <Info size={12} /> {chunk.note}
+        </p>
+      )}
+      {type === 'image' ? (
+        <div className="chunk-card-image-placeholder">
+          <ImageIcon size={22} />
+          <span>{chunk.image_name || 'Image'}</span>
+        </div>
+      ) : (
+        <div className={`chunk-card-body ${type === 'table' ? 'is-table' : ''} ${expanded ? 'expanded' : ''}`}>
+          {chunk.content}
+        </div>
+      )}
+      {isLong && type !== 'image' && (
         <button
           type="button"
           className="chunk-card-toggle"
@@ -61,31 +90,57 @@ function ChunkCard({ chunk, index }) {
   )
 }
 
-function StatsBar({ stats }) {
+function StatsBar({ stats, chunks }) {
   if (!stats) return null
+  const typeCounts = (chunks || []).reduce((acc, c) => {
+    const type = c.type || 'text'
+    acc[type] = (acc[type] || 0) + 1
+    return acc
+  }, {})
+  const showBreakdown = Object.keys(typeCounts).length > 1
+
   return (
-    <div className="chunking-stats-row">
-      <div className="chunking-stat-card">
-        <span className="chunking-stat-num">{stats.count?.toLocaleString() || 0}</span>
-        <span className="chunking-stat-label">Total Chunks</span>
+    <>
+      <div className="chunking-stats-row">
+        <div className="chunking-stat-card">
+          <span className="chunking-stat-num">{stats.count?.toLocaleString() || 0}</span>
+          <span className="chunking-stat-label">Total Chunks</span>
+        </div>
+        <div className="chunking-stat-card">
+          <span className="chunking-stat-num">{stats.avg_chars?.toLocaleString() || 0}</span>
+          <span className="chunking-stat-label">Avg Characters</span>
+        </div>
+        <div className="chunking-stat-card">
+          <span className="chunking-stat-num">{stats.min_chars?.toLocaleString() || 0}</span>
+          <span className="chunking-stat-label">Min Characters</span>
+        </div>
+        <div className="chunking-stat-card">
+          <span className="chunking-stat-num">{stats.max_chars?.toLocaleString() || 0}</span>
+          <span className="chunking-stat-label">Max Characters</span>
+        </div>
+        <div className="chunking-stat-card">
+          <span className="chunking-stat-num">{stats.total_chars?.toLocaleString() || 0}</span>
+          <span className="chunking-stat-label">Total Characters</span>
+        </div>
       </div>
-      <div className="chunking-stat-card">
-        <span className="chunking-stat-num">{stats.avg_chars?.toLocaleString() || 0}</span>
-        <span className="chunking-stat-label">Avg Characters</span>
-      </div>
-      <div className="chunking-stat-card">
-        <span className="chunking-stat-num">{stats.min_chars?.toLocaleString() || 0}</span>
-        <span className="chunking-stat-label">Min Characters</span>
-      </div>
-      <div className="chunking-stat-card">
-        <span className="chunking-stat-num">{stats.max_chars?.toLocaleString() || 0}</span>
-        <span className="chunking-stat-label">Max Characters</span>
-      </div>
-      <div className="chunking-stat-card">
-        <span className="chunking-stat-num">{stats.total_chars?.toLocaleString() || 0}</span>
-        <span className="chunking-stat-label">Total Characters</span>
-      </div>
-    </div>
+      {showBreakdown && (
+        <div className="chunking-type-breakdown">
+          <Info size={12} />
+          <span>
+            This document mixes content types, so structure-aware chunking kept them separate:{' '}
+            {Object.entries(typeCounts).map(([type, count], i) => {
+              const meta = CHUNK_TYPE_META[type] || CHUNK_TYPE_META.text
+              return (
+                <span key={type}>
+                  {i > 0 && ', '}
+                  <strong>{count}</strong> {meta.label.toLowerCase()}{count === 1 ? '' : 's'}
+                </span>
+              )
+            })}.
+          </span>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -662,7 +717,7 @@ export default function ChunkingLab({ onBack }) {
 
                   {activeResult && (
                     <>
-                      <StatsBar stats={activeResult.stats} />
+                      <StatsBar stats={activeResult.stats} chunks={activeResult.chunks} />
                       <div className="chunking-card-list">
                         {activeResult.chunks.map((chunk, idx) => (
                           <ChunkCard
