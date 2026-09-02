@@ -47,6 +47,7 @@
 .agent-node-icon.sub { background: #eef0f8; color: var(--navy); }
 .agent-node-identity h3 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--navy); font-size: 13px; }
 .agent-node-identity p { margin: 1px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 10px; }
+.agent-node-mode { color: var(--royal) !important; font-weight: 800; text-transform: capitalize; }
 .agent-node-actions { display: flex; gap: 3px; flex: 0 0 auto; }
 .agent-node-actions button { width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--royal); }
 .agent-node-actions button.danger { color: #c23b52; }

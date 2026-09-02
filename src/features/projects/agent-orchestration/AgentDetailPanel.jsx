@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { X, Save, Trash2, Wrench, KeyRound, CheckCircle2, AlertTriangle, Workflow } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
-import { PROVIDERS, loadKeyedProviders, modelsFor } from './providers'
+import { PROVIDERS, loadKeyedProviders, modelsFor, ORCHESTRATION_MODES, modeHint } from './providers'
 
 export default function AgentDetailPanel() {
   const { selectedAgentId, setSelectedAgentId, agents, connections, updateAgentInStore, removeAgent } = useAgentStore()
@@ -113,6 +113,13 @@ export default function AgentDetailPanel() {
           ))}
         </div>
         <hr />
+        <label>Orchestration
+          <select value={editForm.orchestration_mode || 'supervisor'}
+            onChange={(e) => setEditForm({ ...editForm, orchestration_mode: e.target.value })}>
+            {ORCHESTRATION_MODES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          <small className="agent-key-hint">{modeHint(editForm.orchestration_mode || 'supervisor')}</small>
+        </label>
         <div className="agent-detail-tools">
           <div className="agent-detail-tools-head"><Workflow size={14} /><span>Can consult</span></div>
           {delegates.length === 0

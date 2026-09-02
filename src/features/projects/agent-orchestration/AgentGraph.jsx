@@ -4,7 +4,7 @@ import '@xyflow/react/dist/style.css'
 import { Bot, Trash2, Play, Workflow, KeyRound, CheckCircle2, Download, Upload, X } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
-import { PROVIDERS, PROVIDER_DOT, loadKeyedProviders, modelsFor } from './providers'
+import { PROVIDERS, PROVIDER_DOT, loadKeyedProviders, modelsFor, ORCHESTRATION_MODES, modeHint } from './providers'
 
 function AgentNode({ data, id }) {
   const { selectedAgentId, setSelectedAgentId, removeAgent, setIsChatOpen, setChatAgentId } = useAgentStore()
@@ -16,7 +16,8 @@ function AgentNode({ data, id }) {
         <div className="agent-node-top">
           <div className="agent-node-identity">
             <span className={`agent-node-icon ${data.is_sub_agent ? 'sub' : ''}`}>{data.is_sub_agent ? <Workflow size={15} /> : <Bot size={15} />}</span>
-            <div><h3>{data.name}</h3><p>{data.llm_provider}/{data.llm_model}</p></div>
+            <div><h3>{data.name}</h3><p>{data.llm_provider}/{data.llm_model}</p>
+              {data.orchestration_mode && data.orchestration_mode !== 'supervisor' && <p className="agent-node-mode">{data.orchestration_mode}</p>}</div>
           </div>
           <div className="agent-node-actions">
             <button title="Chat with this agent" onClick={(event) => { event.stopPropagation(); setChatAgentId(id); setIsChatOpen(true) }}><Play size={13} /></button>
@@ -36,7 +37,7 @@ function AgentNode({ data, id }) {
 }
 
 const nodeTypes = { agentNode: AgentNode }
-const emptyAgent = { name: '', description: '', system_prompt: '', llm_provider: 'openai', llm_model: 'gpt-4o', temperature: 0.7, max_tokens: 4096, is_sub_agent: false, api_key: '' }
+const emptyAgent = { name: '', description: '', system_prompt: '', llm_provider: 'openai', llm_model: 'gpt-4o', temperature: 0.7, max_tokens: 4096, is_sub_agent: false, orchestration_mode: 'supervisor', api_key: '' }
 
 export default function AgentGraph() {
   const { agents, connections, addAgent, addConnection, updateConnection, setAgents, setConnections, setSelectedAgentId } = useAgentStore()
@@ -75,7 +76,11 @@ export default function AgentGraph() {
   // it is worth capturing rather than leaving every edge unlabelled.
   const onEdgeClick = useCallback(async (_event, edge) => {
     const current = connections.find((c) => c.id === edge.id)
-    const label = window.prompt('When should this agent be consulted?\n(e.g. "weather questions" — helps the source agent route correctly)', current?.label || '')
+    const label = window.prompt(
+      'When should this agent be consulted?\n\n'
+      + 'e.g. "the question is about weather"\n\n'
+      + 'In Supervisor mode this guides the model\'s choice. In Conditional mode it is the condition that decides whether this agent runs at all.',
+      current?.condition || current?.label || '')
     if (label === null) return
     try {
       const updated = await agentApi(`/agents/connections/${edge.id}`, { method: 'PUT', body: JSON.stringify({ label }) })
@@ -180,6 +185,12 @@ export default function AgentGraph() {
             <label>Temperature: {draft.temperature.toFixed(1)}<input type="range" min="0" max="2" step="0.1" value={draft.temperature} onChange={(e) => setDraft({ ...draft, temperature: parseFloat(e.target.value) })} /></label>
             <label>Max Tokens<input type="number" value={draft.max_tokens} onChange={(e) => setDraft({ ...draft, max_tokens: parseInt(e.target.value) || 4096 })} /></label>
           </div>
+          <label>Orchestration
+            <select value={draft.orchestration_mode} onChange={(e) => setDraft({ ...draft, orchestration_mode: e.target.value })}>
+              {ORCHESTRATION_MODES.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            <small className="agent-key-hint">{modeHint(draft.orchestration_mode)} Only applies once this agent is connected to others.</small>
+          </label>
           <label className="agent-switch-row"><input type="checkbox" checked={draft.is_sub_agent} onChange={(e) => setDraft({ ...draft, is_sub_agent: e.target.checked })} /> Sub-agent mode</label>
           {error && <p className="agent-error">{error}</p>}
           <div className="agent-dialog-actions">
