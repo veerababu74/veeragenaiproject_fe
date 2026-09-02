@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Key, Trash2, Plus, Clock, HardDrive } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
-
-const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI' },
-  { id: 'groq', name: 'Groq' },
-  { id: 'anthropic', name: 'Anthropic' },
-  { id: 'google_genai', name: 'Google GenAI' },
-  { id: 'openrouter', name: 'OpenRouter' },
-  { id: 'mistral', name: 'Mistral' },
-]
+import { PROVIDERS } from './providers'
 const STAT_LABELS = [{ key: 'agents', label: 'Agents' }, { key: 'tools', label: 'Tools' }, { key: 'connections', label: 'Connections' }, { key: 'rag_documents', label: 'RAG Docs' }, { key: 'executions', label: 'Executions' }]
 
 export default function SettingsPanel() {

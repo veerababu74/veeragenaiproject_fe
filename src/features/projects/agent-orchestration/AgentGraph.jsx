@@ -75,9 +75,10 @@ export default function AgentGraph() {
 
   const handleCreate = async () => {
     if (!draft.name.trim()) { setError('Name is required'); return }
+    if (!draft.llm_model.trim()) { setError('Model is required'); return }
     if (!providerHasKey && !draft.api_key.trim()) { setError(`Enter an API key for ${PROVIDERS.find((p) => p.id === draft.llm_provider)?.name || draft.llm_provider} — this agent cannot run without one`); return }
     try {
-      const created = await agentApi('/agents', { method: 'POST', body: JSON.stringify({ ...draft, api_key: draft.api_key.trim() || undefined, position_x: 100 + Math.random() * 400, position_y: 100 + Math.random() * 300 }) })
+      const created = await agentApi('/agents', { method: 'POST', body: JSON.stringify({ ...draft, llm_model: draft.llm_model.trim(), api_key: draft.api_key.trim() || undefined, position_x: 100 + Math.random() * 400, position_y: 100 + Math.random() * 300 }) })
       addAgent({ ...created, tools: [], connections: [] })
       if (draft.api_key.trim()) setKeyedProviders((current) => [...new Set([...current, draft.llm_provider])])
       closeDialog()
@@ -111,8 +112,14 @@ export default function AgentGraph() {
           <label>System Prompt<textarea rows="4" value={draft.system_prompt} onChange={(e) => setDraft({ ...draft, system_prompt: e.target.value })} placeholder="You are a helpful AI assistant..." /></label>
           <div className="agent-dialog-row">
             <label>LLM Provider<select value={draft.llm_provider} onChange={(e) => { const provider = e.target.value; setDraft({ ...draft, llm_provider: provider, llm_model: modelsFor(provider)[0] || '' }) }}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-            <label>Model<select value={draft.llm_model} onChange={(e) => setDraft({ ...draft, llm_model: e.target.value })}>{models.map((m) => <option key={m} value={m}>{m}</option>)}</select></label>
+            <label>Model *
+              <input list={`models-${draft.llm_provider}`} value={draft.llm_model} autoComplete="off"
+                onChange={(e) => setDraft({ ...draft, llm_model: e.target.value })}
+                placeholder="e.g. llama-3.3-70b-versatile" />
+              <datalist id={`models-${draft.llm_provider}`}>{models.map((m) => <option key={m} value={m} />)}</datalist>
+            </label>
           </div>
+          <small className="agent-key-hint">Type any model your provider supports — the list is only a shortcut for common ones.</small>
           <label>
             <span className="agent-key-label">
               <KeyRound size={12} /> API Key {providerHasKey ? '' : '*'}

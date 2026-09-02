@@ -15,6 +15,10 @@ export const PROVIDER_DOT = {
 }
 
 export const providerName = (id) => PROVIDERS.find((p) => p.id === id)?.name || id
+
+/** Suggestions only. Model names change constantly, so the model field is free
+ *  text and any name the provider accepts can be typed in - this list just
+ *  saves typing for the common ones. */
 export const modelsFor = (id) => PROVIDERS.find((p) => p.id === id)?.models || []
 
 /** Provider ids the user has already saved a key for. Keys are stored per

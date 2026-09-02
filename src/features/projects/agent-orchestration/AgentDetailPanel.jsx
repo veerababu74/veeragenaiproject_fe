@@ -36,8 +36,9 @@ export default function AgentDetailPanel() {
 
   const handleSave = async () => {
     setError(''); setSaved(false)
+    if (!editForm.llm_model.trim()) { setError('Model is required'); return }
     try {
-      const payload = { ...editForm, api_key: apiKey.trim() || undefined }
+      const payload = { ...editForm, llm_model: editForm.llm_model.trim(), api_key: apiKey.trim() || undefined }
       const updated = await agentApi(`/agents/${agent.id}`, { method: 'PUT', body: JSON.stringify(payload) })
       updateAgentInStore({ ...updated, tools: agent.tools, connections: agent.connections })
       if (apiKey.trim()) {
@@ -73,7 +74,12 @@ export default function AgentDetailPanel() {
         <hr />
         <div className="agent-dialog-row">
           <label>Provider<select value={editForm.llm_provider} onChange={(e) => { const provider = e.target.value; setEditForm({ ...editForm, llm_provider: provider, llm_model: modelsFor(provider)[0] || '' }) }}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-          <label>Model<select value={editForm.llm_model} onChange={(e) => setEditForm({ ...editForm, llm_model: e.target.value })}>{models.map((m) => <option key={m} value={m}>{m}</option>)}</select></label>
+          <label>Model
+            <input list={`detail-models-${editForm.llm_provider}`} value={editForm.llm_model} autoComplete="off"
+              onChange={(e) => setEditForm({ ...editForm, llm_model: e.target.value })}
+              placeholder="e.g. llama-3.3-70b-versatile" />
+            <datalist id={`detail-models-${editForm.llm_provider}`}>{models.map((m) => <option key={m} value={m} />)}</datalist>
+          </label>
         </div>
         <label>
           <span className="agent-key-label">
