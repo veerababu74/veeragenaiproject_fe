@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/agent-api/*"
-  to = "https://agent-orchestration-backend.vercel.app/:splat"
+  to = "https://veeragenaiproject-agent-orchestation.fastapicloud.dev/:splat"
   status = 200
   force = true
 
