@@ -24,9 +24,10 @@ function AgentNode({ data, id }) {
           </div>
         </div>
         {data.description && <p className="agent-node-desc">{data.description}</p>}
-        {data.tools?.length > 0 && <div className="agent-node-tools">
-          {data.tools.slice(0, 3).map((tool) => <span key={tool.id} className="badge">{tool.name}</span>)}
-          {data.tools.length > 3 && <span className="badge outline">+{data.tools.length - 3}</span>}
+        {(data.tools?.length > 0 || data.has_api_key === false) && <div className="agent-node-tools">
+          {data.has_api_key === false && <span className="badge destructive" title={`No ${data.llm_provider} API key — this agent cannot run yet`}>no API key</span>}
+          {data.tools?.slice(0, 3).map((tool) => <span key={tool.id} className="badge">{tool.name}</span>)}
+          {data.tools?.length > 3 && <span className="badge outline">+{data.tools.length - 3}</span>}
         </div>}
       </div>
       <Handle type="source" position={Position.Right} className="agent-node-handle" />

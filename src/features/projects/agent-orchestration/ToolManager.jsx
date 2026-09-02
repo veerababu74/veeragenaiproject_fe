@@ -5,6 +5,15 @@ import { useAgentStore } from './store'
 
 // The catalogue itself comes from the backend so the two can't drift; this map
 // only supplies presentation for the config keys the backend advertises.
+// A tool's credential belongs to that tool's own service, which is not the LLM
+// key set on the agent - so name the service in the label rather than saying
+// "API Key" and leaving people wondering why they are asked twice.
+const TOOL_FIELD_LABELS = {
+  'tavily.api_key': 'Tavily API Key',
+  'google_search.api_key': 'Serper API Key',
+  'github.api_key': 'GitHub Personal Access Token',
+  'slack.api_key': 'Slack Bot Token (xoxb-...)',
+}
 const FIELD_META = {
   api_key: { label: 'API Key', type: 'password' },
   webhook_url: { label: 'Slack Webhook URL', type: 'text' },
@@ -41,9 +50,16 @@ export default function ToolManager() {
   const customDialog = useRef(null)
 
   useEffect(() => { agentApi('/tools').then(setTools).catch(() => {}) }, [setTools])
-  useEffect(() => { agentApi('/tools/builtin').then(setCatalogue).catch(() => {}) }, [])
+  useEffect(() => {
+    agentApi('/tools/builtin').then((list) => {
+      setCatalogue(list)
+      // Preselect here too: opening the dialog before this resolves would
+      // otherwise leave the whole list unselected.
+      setBuiltinType((current) => current || list[0]?.type || null)
+    }).catch(() => {})
+  }, [])
 
-  const openBuiltinDialog = () => { setBuiltinType(catalogue[0]?.type || null); setBuiltinConfig({}); setError(''); builtinDialog.current?.showModal() }
+  const openBuiltinDialog = () => { setBuiltinType((current) => current || catalogue[0]?.type || null); setBuiltinConfig({}); setError(''); builtinDialog.current?.showModal() }
   const openCustomDialog = () => { setCustomTool(emptyCustomTool); setSchemaFields([{ key: '', type: 'string', desc: '' }]); setError(''); customDialog.current?.showModal() }
 
   const selectedBuiltin = catalogue.find((tool) => tool.type === builtinType)
@@ -51,7 +67,9 @@ export default function ToolManager() {
     if (!selectedBuiltin) return
     const missing = missingRequired(selectedBuiltin, builtinConfig)
     if (missing.length) {
-      setError(`${missing.map((rule) => rule.split('|').map((key) => FIELD_META[key]?.label || key).join(' or ')).join(', ')} required — without it this tool is skipped at run time`)
+      const names = missing.map((rule) => rule.split('|')
+        .map((key) => TOOL_FIELD_LABELS[`${selectedBuiltin.type}.${key}`] || FIELD_META[key]?.label || key).join(' or ')).join(', ')
+      setError(`${names} required — this is ${selectedBuiltin.name}'s own credential, and without it the tool is skipped at run time`)
       return
     }
     try {
@@ -116,11 +134,15 @@ export default function ToolManager() {
           </div>
           {selectedBuiltin && selectedBuiltin.config_fields.length > 0 && <div className="agent-builtin-config">
             <h4>Config for {selectedBuiltin.name}</h4>
+            {(selectedBuiltin.requires || []).length > 0 && (
+              <p className="agent-muted">This is {selectedBuiltin.name}'s own credential, from that service — not the LLM API key you set on your agents.</p>
+            )}
             {selectedBuiltin.config_fields.map((key) => {
               const meta = FIELD_META[key] || { label: key, type: 'text' }
+              const label = TOOL_FIELD_LABELS[`${selectedBuiltin.type}.${key}`] || meta.label
               const required = (selectedBuiltin.requires || []).some((rule) => rule.split('|').includes(key))
               return (
-                <label key={key}>{meta.label}{required ? ' *' : ''}
+                <label key={key}>{label}{required ? ' *' : ''}
                   <input type={meta.type} value={builtinConfig[key] || ''} autoComplete="off"
                     onChange={(e) => setBuiltinConfig({ ...builtinConfig, [key]: e.target.value })} />
                 </label>

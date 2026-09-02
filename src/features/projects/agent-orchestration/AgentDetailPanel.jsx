@@ -5,7 +5,7 @@ import { useAgentStore } from './store'
 import { PROVIDERS, loadKeyedProviders, modelsFor } from './providers'
 
 export default function AgentDetailPanel() {
-  const { selectedAgentId, setSelectedAgentId, agents, updateAgentInStore, removeAgent } = useAgentStore()
+  const { selectedAgentId, setSelectedAgentId, agents, connections, updateAgentInStore, removeAgent } = useAgentStore()
   const agent = agents.find((a) => a.id === selectedAgentId)
   const [editForm, setEditForm] = useState(null)
   const [allTools, setAllTools] = useState([])
@@ -28,11 +28,17 @@ export default function AgentDetailPanel() {
 
   const models = modelsFor(editForm.llm_provider)
   const providerHasKey = keyedProviders.includes(editForm.llm_provider)
-  // Outgoing edges are the agents this one can consult during a run.
-  const delegates = (agent.connections || [])
-    .filter((c) => c.source_agent_id === agent.id)
-    .map((c) => ({ id: c.id, label: c.label, agent: agents.find((a) => a.id === c.target_agent_id) }))
-    .filter((d) => d.agent)
+  // Read from the store's connections, not agent.connections: /agents/graph
+  // returns plain agent rows, and this stays in sync as edges are drawn.
+  // Direction is ignored to match how the backend resolves delegates.
+  const delegates = connections
+    .filter((c) => c.source_agent_id === agent.id || c.target_agent_id === agent.id)
+    .map((c) => ({
+      id: c.id,
+      label: c.label,
+      agent: agents.find((a) => a.id === (c.source_agent_id === agent.id ? c.target_agent_id : c.source_agent_id)),
+    }))
+    .filter((d) => d.agent && d.agent.id !== agent.id)
 
   const handleSave = async () => {
     setError(''); setSaved(false)
