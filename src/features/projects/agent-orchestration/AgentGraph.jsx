@@ -1,19 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, Handle, Position, MarkerType, BackgroundVariant } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Bot, Trash2, Play, Workflow } from 'lucide-react'
+import { Bot, Trash2, Play, Workflow, KeyRound, CheckCircle2 } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
-
-const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o3-mini'] },
-  { id: 'groq', name: 'Groq', models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'] },
-  { id: 'anthropic', name: 'Anthropic', models: ['claude-sonnet-4-20250514', 'claude-haiku-4-20250414'] },
-  { id: 'google_genai', name: 'Google GenAI', models: ['gemini-2.0-flash', 'gemini-1.5-pro'] },
-  { id: 'openrouter', name: 'OpenRouter', models: ['openai/gpt-4o', 'anthropic/claude-sonnet-4'] },
-  { id: 'mistral', name: 'Mistral', models: ['mistral-large-latest', 'codestral-latest'] },
-]
-const PROVIDER_DOT = { openai: 'dot-emerald', groq: 'dot-orange', anthropic: 'dot-amber', google_genai: 'dot-blue', openrouter: 'dot-purple', mistral: 'dot-rose' }
+import { PROVIDERS, PROVIDER_DOT, loadKeyedProviders, modelsFor } from './providers'
 
 function AgentNode({ data, id }) {
   const { selectedAgentId, setSelectedAgentId, removeAgent, setIsChatOpen, setChatAgentId } = useAgentStore()
@@ -44,15 +35,17 @@ function AgentNode({ data, id }) {
 }
 
 const nodeTypes = { agentNode: AgentNode }
-const emptyAgent = { name: '', description: '', system_prompt: '', llm_provider: 'openai', llm_model: 'gpt-4o', temperature: 0.7, max_tokens: 4096, is_sub_agent: false }
+const emptyAgent = { name: '', description: '', system_prompt: '', llm_provider: 'openai', llm_model: 'gpt-4o', temperature: 0.7, max_tokens: 4096, is_sub_agent: false, api_key: '' }
 
 export default function AgentGraph() {
   const { agents, connections, addAgent, addConnection, setSelectedAgentId } = useAgentStore()
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [draft, setDraft] = useState(emptyAgent)
+  const [keyedProviders, setKeyedProviders] = useState([])
   const [error, setError] = useState('')
   const dialogRef = useRef(null)
+  const providerHasKey = keyedProviders.includes(draft.llm_provider)
 
   useEffect(() => {
     setNodes(agents.map((agent) => ({ id: agent.id, type: 'agentNode', position: { x: agent.position_x, y: agent.position_y }, data: { ...agent } })))
@@ -62,7 +55,10 @@ export default function AgentGraph() {
     })))
   }, [agents, connections, setNodes, setEdges])
 
-  const openDialog = () => { setDraft(emptyAgent); setError(''); dialogRef.current?.showModal() }
+  const openDialog = () => {
+    setDraft(emptyAgent); setError(''); dialogRef.current?.showModal()
+    loadKeyedProviders().then(setKeyedProviders)
+  }
   const closeDialog = () => dialogRef.current?.close()
 
   const onConnect = useCallback(async (connection) => {
@@ -79,14 +75,16 @@ export default function AgentGraph() {
 
   const handleCreate = async () => {
     if (!draft.name.trim()) { setError('Name is required'); return }
+    if (!providerHasKey && !draft.api_key.trim()) { setError(`Enter an API key for ${PROVIDERS.find((p) => p.id === draft.llm_provider)?.name || draft.llm_provider} — this agent cannot run without one`); return }
     try {
-      const created = await agentApi('/agents', { method: 'POST', body: JSON.stringify({ ...draft, position_x: 100 + Math.random() * 400, position_y: 100 + Math.random() * 300 }) })
+      const created = await agentApi('/agents', { method: 'POST', body: JSON.stringify({ ...draft, api_key: draft.api_key.trim() || undefined, position_x: 100 + Math.random() * 400, position_y: 100 + Math.random() * 300 }) })
       addAgent({ ...created, tools: [], connections: [] })
+      if (draft.api_key.trim()) setKeyedProviders((current) => [...new Set([...current, draft.llm_provider])])
       closeDialog()
     } catch (requestError) { setError(requestError.message) }
   }
 
-  const models = PROVIDERS.find((p) => p.id === draft.llm_provider)?.models || []
+  const models = modelsFor(draft.llm_provider)
 
   return (
     <div className="agent-graph">
@@ -112,9 +110,19 @@ export default function AgentGraph() {
           <label>Description<input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="What does this agent do?" /></label>
           <label>System Prompt<textarea rows="4" value={draft.system_prompt} onChange={(e) => setDraft({ ...draft, system_prompt: e.target.value })} placeholder="You are a helpful AI assistant..." /></label>
           <div className="agent-dialog-row">
-            <label>LLM Provider<select value={draft.llm_provider} onChange={(e) => { const provider = e.target.value; setDraft({ ...draft, llm_provider: provider, llm_model: PROVIDERS.find((p) => p.id === provider)?.models[0] || '' }) }}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+            <label>LLM Provider<select value={draft.llm_provider} onChange={(e) => { const provider = e.target.value; setDraft({ ...draft, llm_provider: provider, llm_model: modelsFor(provider)[0] || '' }) }}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
             <label>Model<select value={draft.llm_model} onChange={(e) => setDraft({ ...draft, llm_model: e.target.value })}>{models.map((m) => <option key={m} value={m}>{m}</option>)}</select></label>
           </div>
+          <label>
+            <span className="agent-key-label">
+              <KeyRound size={12} /> API Key {providerHasKey ? '' : '*'}
+              {providerHasKey && <span className="agent-key-saved"><CheckCircle2 size={11} /> saved for this provider</span>}
+            </span>
+            <input type="password" value={draft.api_key} autoComplete="off"
+              onChange={(e) => setDraft({ ...draft, api_key: e.target.value })}
+              placeholder={providerHasKey ? 'Leave blank to reuse the saved key' : 'Required — paste your provider key'} />
+            <small className="agent-key-hint">Stored against the provider and shared by every agent using it. Deleted automatically after 48 hours.</small>
+          </label>
           <div className="agent-dialog-row">
             <label>Temperature: {draft.temperature.toFixed(1)}<input type="range" min="0" max="2" step="0.1" value={draft.temperature} onChange={(e) => setDraft({ ...draft, temperature: parseFloat(e.target.value) })} /></label>
             <label>Max Tokens<input type="number" value={draft.max_tokens} onChange={(e) => setDraft({ ...draft, max_tokens: parseInt(e.target.value) || 4096 })} /></label>

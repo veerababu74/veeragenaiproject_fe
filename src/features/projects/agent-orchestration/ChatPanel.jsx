@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, X, Bot, UserRound, Loader2, Trash2 } from 'lucide-react'
+import { Send, X, Bot, UserRound, Loader2, Trash2, Workflow } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
@@ -23,7 +23,9 @@ export default function ChatPanel() {
     setIsExecuting(true)
     try {
       const result = await agentApi('/execute', { method: 'POST', body: JSON.stringify({ agent_id: chatAgentId, message }) })
-      addChatMessage(result.status === 'error' ? { role: 'assistant', content: `Error: ${result.error}` } : { role: 'assistant', content: result.output })
+      addChatMessage(result.status === 'error'
+        ? { role: 'assistant', content: `Error: ${result.error}`, delegations: result.delegations }
+        : { role: 'assistant', content: result.output, delegations: result.delegations })
     } catch (requestError) {
       addChatMessage({ role: 'assistant', content: `Error: ${requestError.message}` })
     }
@@ -41,7 +43,20 @@ export default function ChatPanel() {
         {chatMessages.map((message, index) => (
           <div key={index} className={`agent-chat-message ${message.role}`}>
             <span className="agent-chat-avatar">{message.role === 'user' ? <UserRound size={14} /> : <Bot size={14} />}</span>
-            <div>{message.role === 'assistant' ? <ReactMarkdown>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div>
+            <div>
+              {message.role === 'assistant' ? <ReactMarkdown>{message.content}</ReactMarkdown> : <p>{message.content}</p>}
+              {message.delegations?.length > 0 && (
+                <details className="agent-delegations">
+                  <summary><Workflow size={11} /> Consulted {new Set(message.delegations.map((d) => d.agent)).size} agent(s)</summary>
+                  {message.delegations.map((step, stepIndex) => (
+                    <div key={stepIndex} className={`agent-delegation-step ${step.role}`}>
+                      <span className="badge outline">{step.agent}</span>
+                      <p>{step.role === 'request' ? `asked: ${step.text}` : step.text}</p>
+                    </div>
+                  ))}
+                </details>
+              )}
+            </div>
           </div>
         ))}
         {isExecuting && <div className="agent-chat-message assistant"><span className="agent-chat-avatar"><Bot size={14} /></span><div className="agent-chat-thinking"><Loader2 size={14} className="agent-spin" /><span>Thinking...</span></div></div>}

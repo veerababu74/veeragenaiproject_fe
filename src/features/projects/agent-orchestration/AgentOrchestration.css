@@ -76,6 +76,21 @@
 .agent-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 .agent-dialog-actions button:not(.agent-primary-button):not(.agent-danger-button) { min-height: 36px; border: 1px solid var(--line); border-radius: 7px; padding: 0 14px; background: var(--white); font-weight: 800; font-size: 12px; }
 .agent-error { margin: 0; padding: 8px 10px; border-left: 3px solid #b52d44; background: #fff1f3; color: #92253a; font-size: 11px; border-radius: 4px; }
+.agent-saved-note { display: flex; align-items: center; gap: 5px; margin: 0; color: #1a7f52; font-size: 11px; font-weight: 800; }
+
+/* API key field */
+.agent-key-label { display: flex; align-items: center; gap: 5px; }
+.agent-key-saved, .agent-key-missing { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; font-size: 9px; font-weight: 800; text-transform: none; letter-spacing: 0; }
+.agent-key-saved { color: #1a7f52; }
+.agent-key-missing { color: #b26a00; }
+.agent-key-hint { color: var(--muted); font-size: 9px; font-weight: 600; }
+
+/* Delegation trace in chat */
+.agent-delegations { margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; background: #f8faff; }
+.agent-delegations summary { display: flex; align-items: center; gap: 5px; padding: 6px 9px; color: var(--royal); font-size: 10px; font-weight: 800; cursor: pointer; }
+.agent-delegation-step { display: grid; gap: 3px; padding: 7px 9px; border-top: 1px solid var(--line); }
+.agent-delegation-step p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.agent-delegation-step.response p { color: var(--navy); }
 .agent-muted { color: var(--muted); font-size: 11px; }
 .agent-muted.center { text-align: center; padding: 14px 0; }
 

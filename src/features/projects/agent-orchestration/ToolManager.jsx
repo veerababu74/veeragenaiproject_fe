@@ -1,20 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus, Trash2, Wrench, Search, Globe, GitBranch, FileText, Zap, Link2 } from 'lucide-react'
+import { Plus, Trash2, Wrench, Search, Globe, GitBranch, FileText, Zap, Link2, Clock, Calculator, MessageSquare, Send } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
 
-const BUILTIN_TOOLS = [
-  { type: 'tavily', name: 'Tavily Search', desc: 'AI-optimized search engine', icon: Search, fields: [{ key: 'api_key', label: 'API Key', type: 'password' }, { key: 'max_results', label: 'Max Results', type: 'number' }] },
-  { type: 'google_search', name: 'Google Search', desc: 'Google via Serper', icon: Globe, fields: [{ key: 'api_key', label: 'Serper API Key', type: 'password' }, { key: 'max_results', label: 'Max Results', type: 'number' }] },
-  { type: 'duckduckgo', name: 'DuckDuckGo', desc: 'Free web search', icon: Search, fields: [] },
-  { type: 'github', name: 'GitHub', desc: 'GitHub repos', icon: GitBranch, fields: [{ key: 'api_key', label: 'GitHub Token', type: 'password' }, { key: 'repo', label: 'Repository', type: 'text' }] },
-  { type: 'rag', name: 'RAG Search', desc: 'Search this user\'s uploaded documents', icon: FileText, fields: [{ key: 'top_k', label: 'Results to retrieve', type: 'number' }] },
-]
-const TOOL_ICONS = { tavily: Search, google_search: Globe, duckduckgo: Search, github: GitBranch, rag: FileText, custom: Link2 }
+// The catalogue itself comes from the backend so the two can't drift; this map
+// only supplies presentation for the config keys the backend advertises.
+const FIELD_META = {
+  api_key: { label: 'API Key', type: 'password' },
+  webhook_url: { label: 'Slack Webhook URL', type: 'text' },
+  channel: { label: 'Default Channel (e.g. #general)', type: 'text' },
+  repo: { label: 'Repository (owner/name)', type: 'text' },
+  max_results: { label: 'Max Results', type: 'number' },
+  top_k: { label: 'Results to retrieve', type: 'number' },
+  timezone_offset_hours: { label: 'UTC offset in hours (e.g. 5.5 for IST)', type: 'number' },
+  headers: { label: 'Default headers (JSON)', type: 'text' },
+}
+const TOOL_ICONS = {
+  tavily: Search, google_search: Globe, duckduckgo: Search, github: GitBranch, rag: FileText,
+  datetime: Clock, calculator: Calculator, slack: MessageSquare, web_fetch: Globe,
+  http_request: Send, custom: Link2,
+}
 const emptyCustomTool = { name: '', desc: '', api_url: '', method: 'POST', auth_type: 'none', auth_config: {} }
+
+/** `requires` entries are field keys; "a|b" means either one satisfies it. */
+function missingRequired(entry, config) {
+  return (entry.requires || []).filter(
+    (rule) => !rule.split('|').some((key) => String(config[key] ?? '').trim()),
+  )
+}
 
 export default function ToolManager() {
   const { tools, setTools, addTool, removeTool } = useAgentStore()
+  const [catalogue, setCatalogue] = useState([])
   const [builtinType, setBuiltinType] = useState(null)
   const [builtinConfig, setBuiltinConfig] = useState({})
   const [customTool, setCustomTool] = useState(emptyCustomTool)
@@ -24,15 +41,21 @@ export default function ToolManager() {
   const customDialog = useRef(null)
 
   useEffect(() => { agentApi('/tools').then(setTools).catch(() => {}) }, [setTools])
+  useEffect(() => { agentApi('/tools/builtin').then(setCatalogue).catch(() => {}) }, [])
 
-  const openBuiltinDialog = () => { setBuiltinType('tavily'); setBuiltinConfig({}); setError(''); builtinDialog.current?.showModal() }
+  const openBuiltinDialog = () => { setBuiltinType(catalogue[0]?.type || null); setBuiltinConfig({}); setError(''); builtinDialog.current?.showModal() }
   const openCustomDialog = () => { setCustomTool(emptyCustomTool); setSchemaFields([{ key: '', type: 'string', desc: '' }]); setError(''); customDialog.current?.showModal() }
 
-  const selectedBuiltin = BUILTIN_TOOLS.find((tool) => tool.type === builtinType)
+  const selectedBuiltin = catalogue.find((tool) => tool.type === builtinType)
   const addBuiltin = async () => {
     if (!selectedBuiltin) return
+    const missing = missingRequired(selectedBuiltin, builtinConfig)
+    if (missing.length) {
+      setError(`${missing.map((rule) => rule.split('|').map((key) => FIELD_META[key]?.label || key).join(' or ')).join(', ')} required — without it this tool is skipped at run time`)
+      return
+    }
     try {
-      const created = await agentApi('/tools', { method: 'POST', body: JSON.stringify({ name: selectedBuiltin.name, description: selectedBuiltin.desc, tool_type: selectedBuiltin.type, is_builtin: true, config: builtinConfig }) })
+      const created = await agentApi('/tools', { method: 'POST', body: JSON.stringify({ name: selectedBuiltin.name, description: selectedBuiltin.description, tool_type: selectedBuiltin.type, is_builtin: true, config: builtinConfig }) })
       addTool({ ...created, custom_schema: null, assigned_agents: [] })
       builtinDialog.current?.close()
     } catch (requestError) { setError(requestError.message) }
@@ -80,15 +103,29 @@ export default function ToolManager() {
         <h2>Add Built-in Tool</h2>
         <div className="agent-dialog-body">
           <div className="agent-builtin-list">
-            {BUILTIN_TOOLS.map((tool) => (
-              <button type="button" key={tool.type} className={`agent-builtin-option ${builtinType === tool.type ? 'active' : ''}`} onClick={() => setBuiltinType(tool.type)}>
-                <span className="provider-chip"><tool.icon size={16} /></span><div><p>{tool.name}</p><small>{tool.desc}</small></div>
-              </button>
-            ))}
+            {catalogue.map((tool) => {
+              const Icon = TOOL_ICONS[tool.type] || Wrench
+              return (
+                <button type="button" key={tool.type} className={`agent-builtin-option ${builtinType === tool.type ? 'active' : ''}`} onClick={() => { setBuiltinType(tool.type); setBuiltinConfig({}); setError('') }}>
+                  <span className="provider-chip"><Icon size={16} /></span>
+                  <div><p>{tool.name}</p><small>{tool.description}</small></div>
+                  {(tool.requires || []).length === 0 && <span className="badge outline">no key</span>}
+                </button>
+              )
+            })}
           </div>
-          {selectedBuiltin && selectedBuiltin.fields.length > 0 && <div className="agent-builtin-config">
+          {selectedBuiltin && selectedBuiltin.config_fields.length > 0 && <div className="agent-builtin-config">
             <h4>Config for {selectedBuiltin.name}</h4>
-            {selectedBuiltin.fields.map((field) => <label key={field.key}>{field.label}<input type={field.type} value={builtinConfig[field.key] || ''} onChange={(e) => setBuiltinConfig({ ...builtinConfig, [field.key]: e.target.value })} /></label>)}
+            {selectedBuiltin.config_fields.map((key) => {
+              const meta = FIELD_META[key] || { label: key, type: 'text' }
+              const required = (selectedBuiltin.requires || []).some((rule) => rule.split('|').includes(key))
+              return (
+                <label key={key}>{meta.label}{required ? ' *' : ''}
+                  <input type={meta.type} value={builtinConfig[key] || ''} autoComplete="off"
+                    onChange={(e) => setBuiltinConfig({ ...builtinConfig, [key]: e.target.value })} />
+                </label>
+              )
+            })}
           </div>}
           {error && <p className="agent-error">{error}</p>}
           <div className="agent-dialog-actions">

@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react'
-import { X, Save, Trash2, Wrench } from 'lucide-react'
+import { X, Save, Trash2, Wrench, KeyRound, CheckCircle2, AlertTriangle, Workflow } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
-
-const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'o1', 'o3-mini'] },
-  { id: 'groq', name: 'Groq', models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'] },
-  { id: 'anthropic', name: 'Anthropic', models: ['claude-sonnet-4-20250514', 'claude-haiku-4-20250414'] },
-  { id: 'google_genai', name: 'Google GenAI', models: ['gemini-2.0-flash', 'gemini-1.5-pro'] },
-  { id: 'openrouter', name: 'OpenRouter', models: ['openai/gpt-4o', 'anthropic/claude-sonnet-4'] },
-  { id: 'mistral', name: 'Mistral', models: ['mistral-large-latest', 'codestral-latest'] },
-]
+import { PROVIDERS, loadKeyedProviders, modelsFor } from './providers'
 
 export default function AgentDetailPanel() {
   const { selectedAgentId, setSelectedAgentId, agents, updateAgentInStore, removeAgent } = useAgentStore()
@@ -18,6 +10,9 @@ export default function AgentDetailPanel() {
   const [editForm, setEditForm] = useState(null)
   const [allTools, setAllTools] = useState([])
   const [assignedToolIds, setAssignedToolIds] = useState([])
+  const [keyedProviders, setKeyedProviders] = useState([])
+  const [apiKey, setApiKey] = useState('')
+  const [saved, setSaved] = useState(false)
   const [prevId, setPrevId] = useState(null)
   const [error, setError] = useState('')
 
@@ -25,16 +20,31 @@ export default function AgentDetailPanel() {
     setPrevId(agent.id)
     setEditForm({ ...agent })
     setAssignedToolIds(agent.tools?.map((t) => t.id) || [])
+    setApiKey(''); setSaved(false)
   }
   useEffect(() => { agentApi('/tools').then(setAllTools).catch(() => {}) }, [])
+  useEffect(() => { loadKeyedProviders().then(setKeyedProviders) }, [selectedAgentId])
   if (!agent || !editForm) return null
 
-  const models = PROVIDERS.find((p) => p.id === editForm.llm_provider)?.models || []
+  const models = modelsFor(editForm.llm_provider)
+  const providerHasKey = keyedProviders.includes(editForm.llm_provider)
+  // Outgoing edges are the agents this one can consult during a run.
+  const delegates = (agent.connections || [])
+    .filter((c) => c.source_agent_id === agent.id)
+    .map((c) => ({ id: c.id, label: c.label, agent: agents.find((a) => a.id === c.target_agent_id) }))
+    .filter((d) => d.agent)
 
   const handleSave = async () => {
+    setError(''); setSaved(false)
     try {
-      const updated = await agentApi(`/agents/${agent.id}`, { method: 'PUT', body: JSON.stringify(editForm) })
+      const payload = { ...editForm, api_key: apiKey.trim() || undefined }
+      const updated = await agentApi(`/agents/${agent.id}`, { method: 'PUT', body: JSON.stringify(payload) })
       updateAgentInStore({ ...updated, tools: agent.tools, connections: agent.connections })
+      if (apiKey.trim()) {
+        setKeyedProviders((current) => [...new Set([...current, editForm.llm_provider])])
+        setApiKey('')
+      }
+      setSaved(true)
     } catch (requestError) { setError(requestError.message) }
   }
   const handleDelete = async () => {
@@ -62,9 +72,19 @@ export default function AgentDetailPanel() {
         <label>System Prompt<textarea rows="5" value={editForm.system_prompt} onChange={(e) => setEditForm({ ...editForm, system_prompt: e.target.value })} /></label>
         <hr />
         <div className="agent-dialog-row">
-          <label>Provider<select value={editForm.llm_provider} onChange={(e) => { const provider = e.target.value; setEditForm({ ...editForm, llm_provider: provider, llm_model: PROVIDERS.find((p) => p.id === provider)?.models[0] || '' }) }}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+          <label>Provider<select value={editForm.llm_provider} onChange={(e) => { const provider = e.target.value; setEditForm({ ...editForm, llm_provider: provider, llm_model: modelsFor(provider)[0] || '' }) }}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
           <label>Model<select value={editForm.llm_model} onChange={(e) => setEditForm({ ...editForm, llm_model: e.target.value })}>{models.map((m) => <option key={m} value={m}>{m}</option>)}</select></label>
         </div>
+        <label>
+          <span className="agent-key-label">
+            <KeyRound size={12} /> API Key
+            {providerHasKey
+              ? <span className="agent-key-saved"><CheckCircle2 size={11} /> saved</span>
+              : <span className="agent-key-missing"><AlertTriangle size={11} /> none for this provider</span>}
+          </span>
+          <input type="password" value={apiKey} autoComplete="off" onChange={(e) => setApiKey(e.target.value)}
+            placeholder={providerHasKey ? 'Leave blank to keep the saved key' : 'Required — this agent cannot run yet'} />
+        </label>
         <div className="agent-dialog-row">
           <label>Temp: {editForm.temperature.toFixed(1)}<input type="range" min="0" max="2" step="0.1" value={editForm.temperature} onChange={(e) => setEditForm({ ...editForm, temperature: parseFloat(e.target.value) })} /></label>
           <label>Max Tokens<input type="number" value={editForm.max_tokens} onChange={(e) => setEditForm({ ...editForm, max_tokens: parseInt(e.target.value) || 4096 })} /></label>
@@ -80,7 +100,20 @@ export default function AgentDetailPanel() {
             </div>
           ))}
         </div>
+        <hr />
+        <div className="agent-detail-tools">
+          <div className="agent-detail-tools-head"><Workflow size={14} /><span>Can consult</span></div>
+          {delegates.length === 0
+            ? <p className="agent-muted">No outgoing connections. Drag from this node's right edge to another agent to let it ask that agent questions during a run.</p>
+            : delegates.map((d) => (
+                <div className="agent-tool-row" key={d.id}>
+                  <div><p>{d.agent.name}</p><small>{d.label || d.agent.description || `${d.agent.llm_provider}/${d.agent.llm_model}`}</small></div>
+                  <span className="badge">delegate</span>
+                </div>
+              ))}
+        </div>
         {error && <p className="agent-error">{error}</p>}
+        {saved && <p className="agent-saved-note"><CheckCircle2 size={12} /> Saved</p>}
         <div className="agent-detail-actions">
           <button className="agent-primary-button" onClick={handleSave}><Save size={14} /> Save</button>
           <button className="agent-danger-button" onClick={handleDelete}><Trash2 size={14} /></button>
