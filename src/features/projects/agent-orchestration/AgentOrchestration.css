@@ -23,10 +23,15 @@
 .agent-graph-toolbar { position: absolute; top: 14px; left: 14px; z-index: 5; display: flex; align-items: center; gap: 10px; }
 .agent-graph-hint { max-width: 340px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.92); color: var(--muted); font-size: 11px; box-shadow: 0 6px 18px rgba(26,26,46,.06); }
 .agent-graph-count { position: absolute; top: 14px; right: 14px; z-index: 5; padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.92); color: var(--muted); font-size: 10px; font-weight: 700; box-shadow: 0 6px 18px rgba(26,26,46,.06); }
+.agent-graph-notice { position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 6; display: flex; align-items: flex-start; gap: 10px; max-width: 640px; margin: 0 auto; padding: 10px 12px; border: 1px solid #cfd8ff; border-radius: 10px; background: #eef2ff; color: var(--navy); font-size: 11px; box-shadow: 0 10px 24px rgba(26,26,46,.12); }
+.agent-graph-notice button { flex: 0 0 auto; margin-left: auto; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--muted); }
+.agent-graph-notice button:hover { background: rgba(255,255,255,.8); color: var(--navy); }
 
 .agent-primary-button { display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 8px; padding: 9px 14px; background: var(--royal); color: var(--white); font-size: 12px; font-weight: 800; box-shadow: 0 8px 20px rgba(46,76,245,.22); }
 .agent-primary-button:disabled { opacity: .5; }
 .agent-primary-button.full { width: 100%; justify-content: center; }
+.agent-ghost-button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: rgba(255,255,255,.92); color: var(--navy); font-size: 11px; font-weight: 800; box-shadow: 0 6px 18px rgba(26,26,46,.06); }
+.agent-ghost-button:hover { background: var(--ice); color: var(--royal); }
 .agent-danger-button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #f0c6cc; border-radius: 8px; padding: 9px 12px; background: #fff3f4; color: #b52d44; }
 
 /* Agent node */
@@ -77,6 +82,11 @@
 .agent-dialog-actions button:not(.agent-primary-button):not(.agent-danger-button) { min-height: 36px; border: 1px solid var(--line); border-radius: 7px; padding: 0 14px; background: var(--white); font-weight: 800; font-size: 12px; }
 .agent-error { margin: 0; padding: 8px 10px; border-left: 3px solid #b52d44; background: #fff1f3; color: #92253a; font-size: 11px; border-radius: 4px; }
 .agent-saved-note { display: flex; align-items: center; gap: 5px; margin: 0; color: #1a7f52; font-size: 11px; font-weight: 800; }
+
+/* Secondary "add a key directly" disclosure in Provider Keys */
+.agent-add-key { border: 1px dashed var(--line); border-radius: 9px; padding: 0 11px; }
+.agent-add-key summary { display: flex; align-items: center; gap: 6px; padding: 9px 0; color: var(--royal); font-size: 11px; font-weight: 800; cursor: pointer; }
+.agent-add-key[open] { padding-bottom: 12px; display: grid; gap: 10px; }
 
 /* API key field */
 .agent-key-label { display: flex; align-items: center; gap: 5px; }
@@ -173,7 +183,8 @@
 .agent-list-row:hover { background: var(--ice); }
 .agent-list-row-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .agent-list-row-main p, .agent-list-row-main h3 { margin: 0; font-size: 12px; font-weight: 700; color: var(--navy); }
-.agent-list-row-main small { color: var(--muted); font-size: 10px; }
+/* Block so a second line (e.g. a run's error message) doesn't run on from the first. */
+.agent-list-row-main small { display: block; color: var(--muted); font-size: 10px; }
 .agent-list-row-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
 .icon-button.danger { color: #c23b52; }
 .status-ready { color: #17664f; } .status-processing { color: var(--royal); } .status-error { color: #92253a; } .status-pending { color: var(--muted); }

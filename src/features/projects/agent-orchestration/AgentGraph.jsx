@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, Handle, Position, MarkerType, BackgroundVariant } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Bot, Trash2, Play, Workflow, KeyRound, CheckCircle2 } from 'lucide-react'
+import { Bot, Trash2, Play, Workflow, KeyRound, CheckCircle2, Download, Upload, X } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
 import { PROVIDERS, PROVIDER_DOT, loadKeyedProviders, modelsFor } from './providers'
@@ -38,13 +38,14 @@ const nodeTypes = { agentNode: AgentNode }
 const emptyAgent = { name: '', description: '', system_prompt: '', llm_provider: 'openai', llm_model: 'gpt-4o', temperature: 0.7, max_tokens: 4096, is_sub_agent: false, api_key: '' }
 
 export default function AgentGraph() {
-  const { agents, connections, addAgent, addConnection, setSelectedAgentId } = useAgentStore()
+  const { agents, connections, addAgent, addConnection, updateConnection, setAgents, setConnections, setSelectedAgentId } = useAgentStore()
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [draft, setDraft] = useState(emptyAgent)
   const [keyedProviders, setKeyedProviders] = useState([])
   const [error, setError] = useState('')
   const dialogRef = useRef(null)
+  const importRef = useRef(null)
   const providerHasKey = keyedProviders.includes(draft.llm_provider)
 
   useEffect(() => {
@@ -69,6 +70,44 @@ export default function AgentGraph() {
     } catch (requestError) { setError(requestError.message) }
   }, [addConnection])
 
+  // The label is what tells the source agent when to consult this target, so
+  // it is worth capturing rather than leaving every edge unlabelled.
+  const onEdgeClick = useCallback(async (_event, edge) => {
+    const current = connections.find((c) => c.id === edge.id)
+    const label = window.prompt('When should this agent be consulted?\n(e.g. "weather questions" — helps the source agent route correctly)', current?.label || '')
+    if (label === null) return
+    try {
+      const updated = await agentApi(`/agents/connections/${edge.id}`, { method: 'PUT', body: JSON.stringify({ label }) })
+      updateConnection({ ...updated, condition: updated.condition || '' })
+    } catch (requestError) { setError(requestError.message) }
+  }, [connections, updateConnection])
+
+  const handleExport = async () => {
+    try {
+      const data = await agentApi('/agents/export')
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `agent-orchestrator-${new Date().toISOString().slice(0, 10)}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (requestError) { setError(requestError.message) }
+  }
+
+  const handleImport = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      const payload = JSON.parse(await file.text())
+      const result = await agentApi('/agents/import', { method: 'POST', body: JSON.stringify(payload) })
+      const graph = await agentApi('/agents/graph')
+      setAgents(graph.agents.map((a) => ({ ...a, tools: a.tools || [], connections: a.connections || [] })))
+      setConnections(graph.connections)
+      setError(`Imported ${result.agents} agent(s) and ${result.tools} tool(s). API keys are not included in exports — re-enter them.`)
+    } catch (requestError) { setError(`Import failed: ${requestError.message}`) }
+  }
+
   const onNodeDragStop = useCallback(async (_event, node) => {
     try { await agentApi(`/agents/${node.id}`, { method: 'PUT', body: JSON.stringify({ position_x: node.position.x, position_y: node.position.y }) }) } catch { /* position sync is best-effort */ }
   }, [])
@@ -91,12 +130,18 @@ export default function AgentGraph() {
     <div className="agent-graph">
       <div className="agent-graph-toolbar">
         <button className="agent-primary-button" onClick={openDialog}><Bot size={15} /> New Agent</button>
-        {agents.length === 0 && <div className="agent-graph-hint">Click <strong>New Agent</strong> to start. Drag from a node's edge to connect agents.</div>}
+        <button className="agent-ghost-button" onClick={handleExport} title="Download this workspace as JSON (without API keys)"><Download size={14} /> Export</button>
+        <button className="agent-ghost-button" onClick={() => importRef.current?.click()} title="Restore a workspace from a JSON export"><Upload size={14} /> Import</button>
+        <input ref={importRef} type="file" accept="application/json,.json" onChange={handleImport} hidden />
+        {agents.length === 0 && <div className="agent-graph-hint">Click <strong>New Agent</strong> to start. Drag from a node's edge to connect agents, then click a connection to say when it should be used.</div>}
       </div>
+      {error && !dialogRef.current?.open && (
+        <div className="agent-graph-notice"><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss"><X size={13} /></button></div>
+      )}
       <div className="agent-graph-count">{agents.length} agents · {connections.length} connections</div>
       <ReactFlow
         nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-        onConnect={onConnect} onNodeDragStop={onNodeDragStop} onPaneClick={() => setSelectedAgentId(null)}
+        onConnect={onConnect} onNodeDragStop={onNodeDragStop} onPaneClick={() => setSelectedAgentId(null)} onEdgeClick={onEdgeClick}
         nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.3 }} deleteKeyCode={null} className="agent-graph-canvas"
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d7ddf2" />

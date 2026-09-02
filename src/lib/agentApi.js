@@ -55,3 +55,43 @@ export async function agentApi(path, options = {}) {
 export async function agentUpload(path, formData) {
   return agentApi(path, { method: 'POST', body: formData })
 }
+
+/** Run an agent over server-sent events, calling `onEvent` for each step the
+ *  backend emits (start, token, delegation, done, error). Resolves once the
+ *  stream closes. No timeout: the stream itself is the progress signal. */
+export async function agentStream(path, body, onEvent, signal) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  let response
+  try {
+    response = await fetch(`${AGENT_API_URL}${normalizedPath}`, {
+      method: 'POST', credentials: 'include', signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error('Cannot reach the Agent Orchestrator server. Please make sure it is running.')
+  }
+
+  if (!response.ok || !response.body) {
+    let detail = ''
+    try { detail = (await response.json())?.detail } catch { /* non-JSON error body */ }
+    throw new Error(detail || `Server error ${response.status}: ${response.statusText}`)
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    // SSE frames are separated by a blank line; keep any partial tail buffered.
+    const frames = buffer.split('\n\n')
+    buffer = frames.pop() ?? ''
+    for (const frame of frames) {
+      const payload = frame.split('\n').filter((line) => line.startsWith('data: ')).map((line) => line.slice(6)).join('')
+      if (!payload) continue
+      try { onEvent(JSON.parse(payload)) } catch { /* ignore a malformed frame */ }
+    }
+  }
+}

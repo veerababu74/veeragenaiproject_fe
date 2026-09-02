@@ -15,7 +15,7 @@ const TABS = [
   { id: 'graph', label: 'Agent Graph', icon: Workflow },
   { id: 'tools', label: 'Tools', icon: Wrench },
   { id: 'rag', label: 'RAG Docs', icon: FileText },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'settings', label: 'Keys & Runs', icon: Settings },
 ]
 
 export default function AgentOrchestration({ onBack }) {
