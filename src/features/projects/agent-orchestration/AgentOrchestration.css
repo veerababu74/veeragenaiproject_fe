@@ -65,6 +65,9 @@
 .agent-card input, .agent-card select, .agent-card textarea { width: 100%; min-height: 36px; border: 1px solid var(--line); border-radius: 7px; padding: 0 10px; color: var(--navy); background: var(--white); font: inherit; }
 .agent-dialog-body textarea, .agent-detail-body textarea, .agent-card textarea { min-height: 72px; padding: 8px 10px; resize: vertical; }
 .agent-dialog-body input[type="range"], .agent-detail-body input[type="range"] { min-height: auto; border: 0; padding: 0; accent-color: var(--royal); }
+.agent-card input[type="file"] { display: flex; align-items: center; padding: 0; color: var(--muted); font-size: 11px; overflow: hidden; }
+.agent-card input[type="file"]::file-selector-button { height: 100%; margin-right: 10px; padding: 0 14px; border: 0; border-right: 1px solid var(--line); border-radius: 6px 0 0 6px; background: var(--ice); color: var(--royal); font: inherit; font-weight: 800; font-size: 11px; cursor: pointer; }
+.agent-card input[type="file"]::file-selector-button:hover { background: #dde3ff; }
 .agent-dialog-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .agent-dialog-row.three { grid-template-columns: 1fr 1fr 1fr; }
 .agent-switch-row { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px; font-size: 11px !important; }
@@ -147,7 +150,9 @@
 .agent-card.notice { grid-template-columns: auto 1fr; display: grid; align-items: flex-start; gap: 10px; background: #fff9ef; border-color: #e4bf87; color: #a16718; }
 .agent-card.notice p { margin: 0; font-size: 12px; font-weight: 800; color: #65430f; }
 .agent-card.notice small { color: #a16718; font-size: 10px; }
-.agent-empty { display: grid; justify-items: center; gap: 8px; padding: 40px 0; color: var(--muted); font-size: 12px; }
+.agent-empty { display: grid; justify-items: center; gap: 10px; padding: 40px 0; color: var(--muted); font-size: 12px; }
+.agent-empty svg { width: 54px; height: 54px; padding: 13px; border-radius: 999px; background: var(--ice); color: var(--royal); }
+.agent-empty p { margin: 0; font-weight: 800; color: var(--navy); font-size: 12px; }
 .agent-list { display: grid; gap: 6px; }
 .agent-list-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; }
 .agent-list-row:hover { background: var(--ice); }
