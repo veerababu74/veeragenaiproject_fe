@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { ReactFlowProvider } from '@xyflow/react'
-import { ArrowLeft, Workflow, Wrench, FileText, Settings, Bot, Clock } from 'lucide-react'
+import { ArrowLeft, Workflow, Wrench, FileText, Settings, Bot, Clock, Activity } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
 import AgentGraph from './AgentGraph'
@@ -9,12 +9,14 @@ import ChatPanel from './ChatPanel'
 import ToolManager from './ToolManager'
 import RagManager from './RagManager'
 import SettingsPanel from './SettingsPanel'
+import TracePanel from './TracePanel'
 import './AgentOrchestration.css'
 
 const TABS = [
   { id: 'graph', label: 'Agent Graph', icon: Workflow },
   { id: 'tools', label: 'Tools', icon: Wrench },
   { id: 'rag', label: 'RAG Docs', icon: FileText },
+  { id: 'traces', label: 'Traces', icon: Activity },
   { id: 'settings', label: 'Keys & Runs', icon: Settings },
 ]
 
@@ -49,6 +51,7 @@ export default function AgentOrchestration({ onBack }) {
           </div></ReactFlowProvider>}
           {activeTab === 'tools' && <ToolManager />}
           {activeTab === 'rag' && <RagManager />}
+          {activeTab === 'traces' && <TracePanel />}
           {activeTab === 'settings' && <SettingsPanel />}
         </div>
         <nav className="agent-orchestration-rail">

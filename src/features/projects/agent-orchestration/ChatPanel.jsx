@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, X, Bot, UserRound, Loader2, Trash2, Workflow } from 'lucide-react'
+import { Send, X, Bot, UserRound, Loader2, Trash2, Workflow, Activity } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { agentApi, agentStream } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
@@ -51,6 +51,7 @@ export default function ChatPanel() {
     setIsExecuting(true)
     let streamed = ''
     const delegations = []
+    const steps = []
     try {
       await agentStream('/execute/stream', { agent_id: chatAgentId, message, conversation_id: thread }, (event) => {
         if (event.type === 'token') {
@@ -59,8 +60,16 @@ export default function ChatPanel() {
         } else if (event.type === 'delegation') {
           delegations.push({ agent: event.agent, role: event.role, text: event.text })
           updateLastChatMessage({ delegations: [...delegations] })
+        } else if (event.type === 'trace') {
+          // Live view of what the agent is deciding and running right now.
+          if (['reasoning', 'tool_call', 'tool_result', 'tool_error'].includes(event.event_type)) {
+            steps.push(event)
+            updateLastChatMessage({ steps: [...steps] })
+          }
         } else if (event.type === 'done') {
-          updateLastChatMessage({ content: event.output || streamed, delegations: event.delegations || delegations, streaming: false })
+          updateLastChatMessage({ content: event.output || streamed, delegations: event.delegations || delegations,
+                                  executionId: event.execution_id, tokens: event.tokens, durationMs: event.duration_ms,
+                                  streaming: false })
         } else if (event.type === 'error') {
           updateLastChatMessage({ content: `Error: ${event.error}`, streaming: false })
         }
@@ -89,6 +98,20 @@ export default function ChatPanel() {
                     ? <ReactMarkdown>{message.content}</ReactMarkdown>
                     : message.streaming && <span className="agent-chat-thinking"><Loader2 size={13} className="agent-spin" /><span>Working...</span></span>)
                 : <p>{message.content}</p>}
+              {message.steps?.length > 0 && (
+                <details className="agent-delegations" open={message.streaming}>
+                  <summary><Activity size={11} /> {message.streaming ? 'Working' : 'Steps'} · {message.steps.length}
+                    {message.tokens > 0 && ` · ${message.tokens} tokens`}</summary>
+                  {message.steps.map((step, stepIndex) => (
+                    <div key={stepIndex} className={`agent-delegation-step ${step.event_type}`} style={{ paddingLeft: `${9 + (step.depth || 0) * 14}px` }}>
+                      <span className="badge outline">{step.name || step.agent || step.event_type}</span>
+                      <p>{step.event_type === 'reasoning'
+                        ? (step.content || `chose ${(step.data?.chose || []).join(', ')}`)
+                        : (step.content || '').slice(0, 300)}</p>
+                    </div>
+                  ))}
+                </details>
+              )}
               {message.delegations?.length > 0 && (
                 <details className="agent-delegations">
                   <summary><Workflow size={11} /> Consulted {new Set(message.delegations.map((d) => d.agent)).size} agent(s)</summary>

@@ -95,6 +95,31 @@
 .agent-key-missing { color: #b26a00; }
 .agent-key-hint { color: var(--muted); font-size: 9px; font-weight: 600; }
 
+/* Observability / trace timeline */
+.trace-summary { display: flex; flex-wrap: wrap; gap: 6px; }
+.trace-timeline { display: grid; gap: 6px; }
+.trace-step { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; border: 1px solid var(--line); border-left-width: 3px; border-radius: 9px; background: var(--white); }
+.trace-step-icon { flex: 0 0 auto; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 6px; background: var(--ice); color: var(--royal); }
+.trace-step-body { min-width: 0; flex: 1; display: grid; gap: 5px; }
+.trace-step-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--navy); }
+.trace-agent { color: var(--muted); font-size: 10px; font-weight: 700; }
+.trace-ms { margin-left: auto; color: var(--muted); font-size: 10px; font-weight: 700; }
+.trace-chose { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 0; color: var(--muted); font-size: 10px; }
+.trace-content { margin: 0; max-height: 190px; overflow: auto; padding: 7px 9px; border-radius: 7px; background: #f6f8ff; color: var(--navy); font-size: 10px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.trace-step.question { border-left-color: var(--royal); }
+.trace-step.reasoning { border-left-color: #a855f7; }
+.trace-step.reasoning .trace-step-icon { background: #f3e8ff; color: #7e22ce; }
+.trace-step.tool_call { border-left-color: #f59e0b; }
+.trace-step.tool_call .trace-step-icon { background: #fef3c7; color: #b45309; }
+.trace-step.tool_result { border-left-color: #10b981; }
+.trace-step.tool_result .trace-step-icon { background: #d1fae5; color: #047857; }
+.trace-step.answer { border-left-color: #10b981; }
+.trace-step.answer .trace-step-icon { background: #d1fae5; color: #047857; }
+.trace-step.tool_error, .trace-step.error { border-left-color: #b52d44; background: #fff7f8; }
+.trace-step.tool_error .trace-step-icon, .trace-step.error .trace-step-icon { background: #fde8ea; color: #b52d44; }
+.trace-run { width: 100%; text-align: left; background: var(--white); cursor: pointer; }
+.trace-run.active { border-color: var(--royal); box-shadow: 0 0 0 2px rgba(46,76,245,.14); }
+
 /* Delegation trace in chat */
 .agent-delegations { margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; background: #f8faff; }
 .agent-delegations summary { display: flex; align-items: center; gap: 5px; padding: 6px 9px; color: var(--royal); font-size: 10px; font-weight: 800; cursor: pointer; }
