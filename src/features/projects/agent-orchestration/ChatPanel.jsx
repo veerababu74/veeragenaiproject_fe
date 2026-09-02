@@ -4,31 +4,46 @@ import ReactMarkdown from 'react-markdown'
 import { agentApi, agentStream } from '../../../lib/agentApi'
 import { useAgentStore } from './store'
 
+// crypto.randomUUID exists only in secure contexts, so it throws when the app
+// is opened over plain http on a LAN address. Chat must not break there.
+const newThreadId = () => (globalThis.crypto?.randomUUID
+  ? crypto.randomUUID()
+  : `c-${Date.now()}-${Math.random().toString(16).slice(2)}`)
+
 export default function ChatPanel() {
   const { isChatOpen, setIsChatOpen, chatAgentId, chatMessages, addChatMessage, updateLastChatMessage,
     clearChatMessages, agents, isExecuting, setIsExecuting, conversationId, setConversationId } = useAgentStore()
   const [input, setInput] = useState('')
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  const threadAgentRef = useRef(null)
   const agent = agents.find((a) => a.id === chatAgentId)
 
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [chatMessages])
   useEffect(() => { if (isChatOpen) setTimeout(() => inputRef.current?.focus(), 100) }, [isChatOpen])
   // One thread per chat session, so the backend can replay earlier turns.
-  useEffect(() => { if (isChatOpen && !conversationId) setConversationId(crypto.randomUUID()) }, [isChatOpen, conversationId, setConversationId])
+  useEffect(() => { if (isChatOpen && !conversationId) setConversationId(newThreadId()) }, [isChatOpen, conversationId, setConversationId])
+  // Each agent gets its own thread: otherwise switching agents would show the
+  // previous agent's transcript and replay its history as the new agent's memory.
+  useEffect(() => {
+    if (!chatAgentId || chatAgentId === threadAgentRef.current) return
+    threadAgentRef.current = chatAgentId
+    clearChatMessages()
+    setConversationId(newThreadId())
+  }, [chatAgentId, clearChatMessages, setConversationId])
   if (!isChatOpen) return null
 
   const startNewThread = async () => {
     const previous = conversationId
     clearChatMessages()
-    setConversationId(crypto.randomUUID())
+    setConversationId(newThreadId())
     if (previous) { try { await agentApi(`/execute/conversations/${previous}`, { method: 'DELETE' }) } catch { /* best effort */ } }
   }
 
   const send = async () => {
     const message = input.trim()
     if (!message || !chatAgentId || isExecuting) return
-    const thread = conversationId || crypto.randomUUID()
+    const thread = conversationId || newThreadId()
     if (!conversationId) setConversationId(thread)
     setInput('')
     addChatMessage({ role: 'user', content: message })
