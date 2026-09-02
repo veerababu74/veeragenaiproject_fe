@@ -2,6 +2,13 @@ const AGENT_API_URL = import.meta.env.DEV
   ? (import.meta.env.VITE_AGENT_API_URL || 'http://localhost:8003').replace(/\/+$/, '')
   : '/agent-api'
 
+// A CRUD call should fail fast, but running an agent is a chain of LLM calls -
+// with delegation it can be several agents deep, each with its own tool calls -
+// so it needs a far longer budget than the rest of the API.
+const DEFAULT_TIMEOUT_MS = 30000
+const RUN_TIMEOUT_MS = 300000
+const isRunPath = (path) => path.startsWith('/execute') || path.startsWith('/rag/upload')
+
 export async function agentApi(path, options = {}) {
   const isFormData = options.body instanceof FormData
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -11,7 +18,7 @@ export async function agentApi(path, options = {}) {
       credentials: 'include',
       headers: { ...(isFormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers },
       ...options,
-      signal: options.signal ?? AbortSignal.timeout(30000),
+      signal: options.signal ?? AbortSignal.timeout(isRunPath(normalizedPath) ? RUN_TIMEOUT_MS : DEFAULT_TIMEOUT_MS),
     })
   } catch (networkErr) {
     if (networkErr.name === 'TimeoutError') {
