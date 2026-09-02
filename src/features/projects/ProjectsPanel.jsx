@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, FolderKanban, Layers3, LockKeyhole, Search, Sparkles, UserPlus } from 'lucide-react'
 import { api } from '../../lib/api'
 import AdvancedRag from './AdvancedRag'
+import AgentOrchestration from './agent-orchestration/AgentOrchestration'
 import BasicChat from './BasicChat'
 import BasicRag from './BasicRag'
 import ChunkingLab from './ChunkingLab'
@@ -9,8 +10,8 @@ import GraphRag from './GraphRag'
 import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
-const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag }
-const PAGE_SIZE = 4
+const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration }
+const PAGE_SIZE = 8
 
 export default function ProjectsPanel({ user, openProject, onOpenProject, onCloseProject, onCreateAccount, onOpenBlog }) {
   const [projects, setProjects] = useState([])

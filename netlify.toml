@@ -3,6 +3,12 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/agent-api/*"
+  to = "https://agent-orchestration-backend.vercel.app/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/*"
   to = "https://veeragenaiproject-be.vercel.app/:splat"
   status = 200

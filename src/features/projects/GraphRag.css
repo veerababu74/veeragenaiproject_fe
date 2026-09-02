@@ -544,7 +544,9 @@
   gap: 0.3rem;
   padding: 0.25rem 0.55rem;
   border-radius: 999px;
+  background: var(--white);
   background: color-mix(in srgb, var(--pill) 12%, white);
+  border: 1px solid var(--pill);
   border: 1px solid color-mix(in srgb, var(--pill) 35%, white);
   color: var(--navy);
   font-size: 0.74rem;

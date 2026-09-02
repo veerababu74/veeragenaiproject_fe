@@ -29,7 +29,7 @@ const ICONS = {
   chart: ChartNoAxesCombined,
   workflow: Workflow,
 }
-const PAGE_SIZE = 4
+const PAGE_SIZE = 8
 
 /* Simple inline block renderer for the landing page blog overlay */
 function LandingBlogBlock({ block }) {
