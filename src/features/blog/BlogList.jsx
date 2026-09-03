@@ -3,6 +3,11 @@ import { ArrowLeft, ArrowRight, BookOpen, FileText, Search } from 'lucide-react'
 import { api } from '../../lib/api'
 import './BlogList.css'
 
+// Sent explicitly rather than relying on the API default, which is also the
+// API maximum — inheriting it meant every post fitted on one page and the
+// pager never appeared. Must stay at or below the server's cap.
+const PAGE_SIZE = 6
+
 export default function BlogList({ onOpenPost, adminMode = false }) {
   const [posts, setPosts] = useState([])
   const [total, setTotal] = useState(0)
@@ -17,8 +22,8 @@ export default function BlogList({ onOpenPost, adminMode = false }) {
     setLoading(true)
     const search = deferredQuery.trim()
     const endpoint = adminMode
-      ? `/admin/blogs?page=${page}`
-      : `/blogs?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`
+      ? `/admin/blogs?page=${page}&page_size=${PAGE_SIZE}`
+      : `/blogs?page=${page}&page_size=${PAGE_SIZE}${search ? `&search=${encodeURIComponent(search)}` : ''}`
     api(endpoint)
       .then((data) => {
         setPosts(data.posts)

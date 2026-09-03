@@ -11,7 +11,10 @@ import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
 const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration }
-const PAGE_SIZE = 8
+// Kept below the number of published projects so the catalogue actually
+// pages. At 8 it matched the project count exactly and every project
+// landed on a single page with the pager stuck at "Page 1 of 1".
+const PAGE_SIZE = 6
 
 export default function ProjectsPanel({ user, openProject, onOpenProject, onCloseProject, onCreateAccount, onOpenBlog }) {
   const [projects, setProjects] = useState([])
@@ -79,7 +82,7 @@ export default function ProjectsPanel({ user, openProject, onOpenProject, onClos
         </article>
       })}
     </div>
-    {!error && filteredProjects.length > 0 && <nav className="project-pagination" aria-label="Project pages">
+    {!error && pageCount > 1 && <nav className="project-pagination" aria-label="Project pages">
       <button onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} title="Previous page"><ArrowLeft size={16} /> Previous</button>
       <span>Page <strong>{currentPage}</strong> of {pageCount} · {filteredProjects.length} projects</span>
       <button onClick={() => setPage(currentPage + 1)} disabled={currentPage === pageCount} title="Next page">Next <ArrowRight size={16} /></button>

@@ -29,7 +29,10 @@ const ICONS = {
   chart: ChartNoAxesCombined,
   workflow: Workflow,
 }
-const PAGE_SIZE = 8
+// Kept below the number of published projects so the catalogue actually
+// pages. At 8 it matched the project count exactly and every project
+// landed on a single page with the pager stuck at "Page 1 of 1".
+const PAGE_SIZE = 6
 
 /* Simple inline block renderer for the landing page blog overlay */
 function LandingBlogBlock({ block }) {
@@ -278,7 +281,7 @@ export default function LandingPage({ authenticated = false, onLogin, onRegister
           </div>
         </article>)}
       </div>
-      {projects.length > 0 && <nav className="portfolio-pagination" aria-label="Project pages">
+      {pageCount > 1 && <nav className="portfolio-pagination" aria-label="Project pages">
         <button onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1} title="Previous page"><ArrowLeft size={16} /> Previous</button>
         <span>Page <strong>{currentPage}</strong> of {pageCount} · {projects.length} projects</span>
         <button onClick={() => setPage(currentPage + 1)} disabled={currentPage === pageCount} title="Next page">Next <ArrowRight size={16} /></button>
