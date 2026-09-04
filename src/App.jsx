@@ -12,7 +12,7 @@ import './App.css'
 
 const PUBLIC_ROUTES = { '/login': 'login', '/register': 'register' }
 const WORKSPACE_ROUTES = { '/projects': 'projects', '/admin': 'admin', '/profile': 'profile', '/blog': 'blog' }
-const PROJECT_ROUTES = { '/projects/basic-chat': 'basic-chat', '/projects/basic-rag': 'basic-rag', '/projects/advanced-rag': 'advanced-rag', '/projects/google-workspace-agent': 'google-workspace-agent', '/projects/chunking-lab': 'chunking-lab', '/projects/graph-rag': 'graph-rag', '/projects/agent-orchestration': 'agent-orchestration' }
+const PROJECT_ROUTES = { '/projects/basic-chat': 'basic-chat', '/projects/basic-rag': 'basic-rag', '/projects/advanced-rag': 'advanced-rag', '/projects/google-workspace-agent': 'google-workspace-agent', '/projects/chunking-lab': 'chunking-lab', '/projects/graph-rag': 'graph-rag', '/projects/agent-orchestration': 'agent-orchestration', '/projects/simple-agent': 'simple-agent', '/projects/inside-llm': 'inside-llm' }
 
 function App() {
   const [user, setUser] = useState(undefined)

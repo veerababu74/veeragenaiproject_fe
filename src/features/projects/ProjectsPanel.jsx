@@ -7,10 +7,12 @@ import BasicChat from './BasicChat'
 import BasicRag from './BasicRag'
 import ChunkingLab from './ChunkingLab'
 import GraphRag from './GraphRag'
+import InsideLLM from './inside-llm/InsideLLM'
+import SimpleAgent from './simple-agent/SimpleAgent'
 import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
-const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration }
+const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration, 'simple-agent': SimpleAgent, 'inside-llm': InsideLLM }
 // Kept below the number of published projects so the catalogue actually
 // pages. At 8 it matched the project count exactly and every project
 // landed on a single page with the pager stuck at "Page 1 of 1".
