@@ -1,6 +1,8 @@
-const CHUNKING_API_URL = import.meta.env.DEV
-  ? (import.meta.env.VITE_CHUNKING_API_URL || 'http://localhost:8001').replace(/\/+$/, '')
-  : '/chunking-api'
+// veeragenaiproject_be2 — the labs service. Chunking Lab keeps its own client
+// because it predates the labs split and its router carries its own /chunking
+// prefix, but it shares the same host and rewrite as every other lab.
+// See BACKENDS.md.
+const CHUNKING_API_URL = (import.meta.env.VITE_LABS_API_URL || '/labs-api').replace(/\/+$/, '')
 
 export async function chunkingApi(path, options = {}) {
   const isFormData = options.body instanceof FormData

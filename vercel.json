@@ -1,9 +1,13 @@
 {
   "rewrites": [
-    { "source": "/chunking-api/:path*", "destination": "https://veeragenaiproject-be2.vercel.app/:path*" },
-    { "source": "/agent-api/:path*", "destination": "https://veeragenaiproject-agent-orchestation.fastapicloud.dev/:path*" },
-    { "source": "/agents-api/:path*", "destination": "https://veeragenaiproject-agents.fastapicloud.dev/:path*" },
     { "source": "/api/:path*", "destination": "https://veeragenaiproject-be.vercel.app/:path*" },
+    { "source": "/orchestrator-api/:path*", "destination": "https://veeragenaiproject-agent-orchestation.fastapicloud.dev/:path*" },
+    { "source": "/agents-api/:path*", "destination": "https://veeragenaiproject-agents-be.fastapicloud.dev/:path*" },
+    { "source": "/labs-api/:path*", "destination": "https://veeragenaiproject-be2.vercel.app/:path*" },
+
+    { "source": "/agent-api/:path*", "destination": "https://veeragenaiproject-agent-orchestation.fastapicloud.dev/:path*" },
+    { "source": "/chunking-api/:path*", "destination": "https://veeragenaiproject-be2.vercel.app/:path*" },
+
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

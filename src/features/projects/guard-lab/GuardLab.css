@@ -1,0 +1,46 @@
+.gl-table tbody tr { cursor: pointer; transition: background .12s; }
+.gl-table tbody tr:hover { background: #f7f9ff; }
+.gl-table tbody tr.gl-control { background: #f9fdfa; }
+.gl-table td strong { color: var(--navy); }
+
+.gl-signals { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.gl-payload {
+  margin: 8px 0 0; padding: 11px 13px; border-radius: 8px;
+  background: var(--navy); color: #dbe3ff; font-size: 11.5px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+.gl-detail { border-color: #bcd0ff; }
+.gl-highlight {
+  display: flex; align-items: start; gap: 7px; margin: 10px 0 0;
+  padding: 9px 12px; border-radius: 8px; background: #fdf0e2; border: 1px solid #f2ddbd;
+  color: #8a5a06; font-size: 11.5px; line-height: 1.55;
+}
+.gl-highlight svg { flex: 0 0 auto; margin-top: 1px; }
+
+.gl-bypasses { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 10px; }
+.gl-bypasses article {
+  padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcff;
+}
+.gl-bypasses header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.gl-arrow { color: var(--muted); font-size: 13px; }
+.gl-bypasses h4 { margin: 0; color: var(--navy); font-size: 12.5px; }
+.gl-lesson {
+  display: flex; align-items: start; gap: 9px; margin: 14px 0 0;
+  padding: 12px 14px; border-radius: 9px; background: #e9edff; border: 1px solid #cfdcff;
+  color: var(--navy); font-size: 12.5px; line-height: 1.65; font-weight: 500;
+}
+.gl-lesson svg { flex: 0 0 auto; margin-top: 2px; color: var(--royal); }
+
+.gl-defences { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.gl-defences .lab-card { margin-bottom: 0; }
+.gl-mitigates { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.gl-defence-note {
+  margin: 10px 0 0; padding-top: 9px; border-top: 1px solid var(--line);
+  color: var(--lab-ink-2); font-size: 11.5px; line-height: 1.6;
+}
+
+.gl-result { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line); }
+.gl-verdict { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 9px; }

@@ -1,6 +1,7 @@
-const AGENT_API_URL = import.meta.env.DEV
-  ? (import.meta.env.VITE_AGENT_API_URL || 'http://localhost:8003').replace(/\/+$/, '')
-  : '/agent-api'
+// agent_orchestration_backend — its own deployment, hosting only the Agent
+// Orchestrator. See BACKENDS.md.
+const AGENT_API_URL = (import.meta.env.VITE_ORCHESTRATOR_API_URL || '/orchestrator-api')
+  .replace(/\/+$/, '')
 
 // A CRUD call should fail fast, but running an agent is a chain of LLM calls -
 // with delegation it can be several agents deep, each with its own tool calls -

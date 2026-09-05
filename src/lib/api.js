@@ -1,6 +1,10 @@
-const API_URL = import.meta.env.DEV
-  ? import.meta.env.VITE_API_URL || 'http://localhost:8000'
-  : '/api'
+// veeragenai_projects_be — the core platform: authentication, blogs, admin,
+// the project catalogue, and the Basic Chat / Basic RAG / Advanced RAG /
+// Graph RAG projects. See BACKENDS.md.
+// The same relative path in both modes: Vercel rewrites it in production, the
+// Vite proxy forwards it in development. Set VITE_CORE_API_URL only to point at
+// a different host.
+const API_URL = import.meta.env.VITE_CORE_API_URL || '/api'
 
 export async function api(path, options = {}) {
   const isFormData = options.body instanceof FormData

@@ -29,10 +29,12 @@ const ICONS = {
   chart: ChartNoAxesCombined,
   workflow: Workflow,
 }
-// Kept below the number of published projects so the catalogue actually
-// pages. At 8 it matched the project count exactly and every project
-// landed on a single page with the pager stuck at "Page 1 of 1".
-const PAGE_SIZE = 6
+// Both pagers are named rather than inline: this file renders two independent
+// lists, and a bare number in a fetch URL is easy to change in one and miss in
+// the other.
+const PROJECT_PAGE_SIZE = 4
+// The blog API caps page_size at 8; this must stay at or below that.
+const BLOG_PAGE_SIZE = 6
 
 /* Simple inline block renderer for the landing page blog overlay */
 function LandingBlogBlock({ block }) {
@@ -121,7 +123,7 @@ export default function LandingPage({ authenticated = false, onLogin, onRegister
   // Fetch public blog posts
   useEffect(() => {
     const search = deferredBlogQuery.trim()
-    api(`/blogs?page=${blogPage}&page_size=4${search ? `&search=${encodeURIComponent(search)}` : ''}`)
+    api(`/blogs?page=${blogPage}&page_size=${BLOG_PAGE_SIZE}${search ? `&search=${encodeURIComponent(search)}` : ''}`)
       .then((data) => { setBlogPosts(data.posts); setBlogTotalPages(data.total_pages) })
       .catch(() => {})
   }, [blogPage, deferredBlogQuery])
@@ -163,9 +165,9 @@ export default function LandingPage({ authenticated = false, onLogin, onRegister
     if (!normalizedQuery) return true
     return [project.title, project.summary, project.category, ...project.tags].some((value) => value.toLowerCase().includes(normalizedQuery))
   })
-  const pageCount = Math.max(1, Math.ceil(projects.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(projects.length / PROJECT_PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
-  const visibleProjects = projects.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const visibleProjects = projects.slice((currentPage - 1) * PROJECT_PAGE_SIZE, currentPage * PROJECT_PAGE_SIZE)
 
   function internalAction(url) {
     if (url === '#signin' || url === '/login') return onLogin
@@ -271,8 +273,8 @@ export default function LandingPage({ authenticated = false, onLogin, onRegister
             <p>{project.summary}</p>
             <div className="portfolio-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
             <div className="portfolio-actions">
-              {project.blog_slug && (
-                <button className="landing-project-blog-btn" onClick={() => setOpenBlogSlug(project.blog_slug)}>
+              {project.blog_slug?.trim() && (
+                <button className="landing-project-blog-btn" onClick={() => setOpenBlogSlug(project.blog_slug.trim())}>
                   <BookOpen size={14} /> Read about this project
                 </button>
               )}

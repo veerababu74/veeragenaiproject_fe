@@ -1,12 +1,10 @@
-// Client for veeragenaiproject_agents_be.
-//
-// That repository is one deployment hosting every agent project, each mounted
-// under /<slug>. So there is one root here and one rewrite in vercel.json, and
-// a project's client is this factory called with its slug.
+// veeragenaiproject_agents_be — one deployment hosting every agent project,
+// each mounted under /<slug> (simpleagent, insidellm). So there is one root
+// here and one rewrite in vercel.json, and a project's client is this factory
+// called with its slug. See BACKENDS.md.
 
-const AGENTS_API_ROOT = import.meta.env.DEV
-  ? (import.meta.env.VITE_AGENTS_API_URL || 'http://localhost:8004').replace(/\/+$/, '')
-  : '/agents-api'
+const AGENTS_API_ROOT = (import.meta.env.VITE_AGENTS_API_URL || '/agents-api')
+  .replace(/\/+$/, '')
 
 // Reading a catalogue should fail fast; embedding a document is a chain of
 // calls to an embedding provider and a vector store and needs far longer.

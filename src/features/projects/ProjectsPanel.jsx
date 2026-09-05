@@ -6,17 +6,19 @@ import AgentOrchestration from './agent-orchestration/AgentOrchestration'
 import BasicChat from './BasicChat'
 import BasicRag from './BasicRag'
 import ChunkingLab from './ChunkingLab'
+import DecodeLab from './decode-lab/DecodeLab'
+import EmbedLab from './embed-lab/EmbedLab'
 import GraphRag from './GraphRag'
+import GuardLab from './guard-lab/GuardLab'
 import InsideLLM from './inside-llm/InsideLLM'
 import SimpleAgent from './simple-agent/SimpleAgent'
 import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
-const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration, 'simple-agent': SimpleAgent, 'inside-llm': InsideLLM }
-// Kept below the number of published projects so the catalogue actually
-// pages. At 8 it matched the project count exactly and every project
-// landed on a single page with the pager stuck at "Page 1 of 1".
-const PAGE_SIZE = 6
+const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration, 'simple-agent': SimpleAgent, 'inside-llm': InsideLLM, 'embed-lab': EmbedLab, 'decode-lab': DecodeLab, 'guard-lab': GuardLab }
+// Must stay below the number of published projects, or the pager renders stuck
+// at "Page 1 of 1" — which is what happened when this matched the count exactly.
+const PROJECT_PAGE_SIZE = 4
 
 export default function ProjectsPanel({ user, openProject, onOpenProject, onCloseProject, onCreateAccount, onOpenBlog }) {
   const [projects, setProjects] = useState([])
@@ -41,9 +43,9 @@ export default function ProjectsPanel({ user, openProject, onOpenProject, onClos
     if (!normalizedQuery) return true
     return [project.title, project.summary, project.category, ...project.tags].some((value) => value.toLowerCase().includes(normalizedQuery))
   })
-  const pageCount = Math.max(1, Math.ceil(filteredProjects.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(filteredProjects.length / PROJECT_PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
-  const visibleProjects = filteredProjects.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const visibleProjects = filteredProjects.slice((currentPage - 1) * PROJECT_PAGE_SIZE, currentPage * PROJECT_PAGE_SIZE)
   const availableProjects = projects.filter((project) => project.status !== 'coming-soon').length
 
   return <section className="projects-panel">
@@ -72,7 +74,7 @@ export default function ProjectsPanel({ user, openProject, onOpenProject, onClos
             <p>{project.summary}</p>
             <div className="project-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
             <div className="project-card-actions">
-              {project.blog_slug && <button className="project-blog-btn" onClick={() => onOpenBlog && onOpenBlog(project.blog_slug)}><BookOpen size={15} /> Read about this project</button>}
+              {project.blog_slug?.trim() && <button className="project-blog-btn" onClick={() => onOpenBlog && onOpenBlog(project.blog_slug.trim())}><BookOpen size={15} /> Read about this project</button>}
               {canOpen && runnable && <button onClick={() => onOpenProject(project.id)}>Open project <ArrowRight size={17} /></button>}
               {canOpen && external && <a href={project.project_url} target="_blank" rel="noreferrer">Open project <ExternalLink size={16} /></a>}
               {project.status === 'coming-soon' && <button disabled><FolderKanban size={16} /> Coming soon</button>}
