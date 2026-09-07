@@ -253,3 +253,34 @@
   .lab-sub-result { justify-self: start; }
   .lab-sub-note { grid-column: 1; }
 }
+
+/* The equation broken into the operations actually performed. */
+.lab-derivation { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.lab-derivation > li {
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcff;
+}
+.lab-derivation-head { display: flex; align-items: center; gap: 7px; }
+.lab-derivation-index {
+  width: 17px; height: 17px; flex: 0 0 auto; display: grid; place-items: center;
+  border-radius: 5px; background: var(--royal); color: var(--white);
+  font-size: 9.5px; font-weight: 900; font-variant-numeric: tabular-nums;
+}
+.lab-derivation h6 {
+  margin: 0; color: var(--navy); font-size: 11px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.lab-derivation-expression {
+  display: block; margin: 7px 0 0; padding: 7px 9px; border-radius: 6px;
+  background: var(--white); border: 1px solid var(--line);
+  color: var(--navy); font-size: 12px; line-height: 1.75;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  white-space: pre-wrap; overflow-x: auto;
+}
+.lab-derivation p {
+  margin: 6px 0 0; color: var(--lab-ink-2); font-size: 11.5px; line-height: 1.6;
+}
+.lab-symbol-shape {
+  display: inline-block; margin-left: 7px; padding: 1px 6px; border-radius: 4px;
+  background: var(--ice); color: var(--muted); font-size: 10px; font-weight: 700;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}

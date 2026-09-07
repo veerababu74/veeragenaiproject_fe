@@ -49,3 +49,30 @@
 .gl-scoremath { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .gl-scoremath .lab-subhead { display: flex; align-items: center; gap: 5px; }
 .gl-scoremath .lab-subhead svg { color: var(--royal); }
+
+/* The rules tab: the constants the scorer holds, then one entry per rule. */
+.gl-constants {
+  margin: 0; display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.gl-constants > div { padding: 9px 11px; background: var(--white); }
+.gl-constants dt {
+  color: var(--muted); font-size: 9.5px; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.gl-constants dd {
+  margin: 3px 0 0; color: var(--royal); font-size: 15px; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.gl-concept { padding: 0 !important; }
+.gl-concept > button {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 0; background: none; text-align: left; cursor: pointer; font-family: inherit;
+}
+.gl-concept h4 { margin: 0; color: var(--navy); font-size: 13.5px; }
+.gl-concept > button p { margin: 2px 0 0; color: var(--muted); font-size: 11.5px; }
+.gl-chevron { margin-left: auto; flex: 0 0 auto; color: var(--muted); transition: transform .15s; }
+.gl-concept.open .gl-chevron { transform: rotate(180deg); }
+.gl-concept-body { padding: 0 14px 14px; border-top: 1px solid var(--line); }

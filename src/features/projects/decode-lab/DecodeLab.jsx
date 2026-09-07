@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Dices, Loader2, RotateCcw, Sigma, Sliders, Thermometer } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
 import LabShell from '../lab-shell/LabShell'
-import { Equation, Substitution, SymbolTable, probability } from '../lab-shell/math'
+import { Derivation, Equation, Substitution, SymbolTable, probability } from '../lab-shell/math'
 import { applySampling, drawSample } from './sampling'
 import './DecodeLab.css'
 
@@ -13,21 +13,13 @@ const SHOWN = 14
 
 const showSpace = (text) => (text ? text.replaceAll(' ', '␣').replaceAll('\n', '⏎') : text)
 
-const SYMBOLS = [
-  { symbol: 'ℓ', means: 'the raw logit GPT-2 produced for this token — an unbounded score' },
-  { symbol: 'T', means: 'temperature, the number every logit is divided by' },
-  { symbol: 'Z', means: 'the partition function: the sum of every exponential, tail included' },
-  { symbol: 'p', means: 'the probability before truncation' },
-  { symbol: 'p′', means: 'the probability after the survivors are renormalised — what is sampled' },
-]
-
 /* One token, all the way through.
  *
  * The bars show where a token ended up; this shows how it got there. Every value
  * is taken from the same computation that drew the bars, so moving a slider
  * moves these numbers too — which is the only way to see that temperature acts
  * before the exponential and truncation acts after it. */
-function WorkedToken({ result, settings, prompt, candidate }) {
+function WorkedToken({ result, settings, prompt, candidate, pipeline }) {
   if (!candidate) return null
 
   const { stats } = result
@@ -83,10 +75,17 @@ function WorkedToken({ result, settings, prompt, candidate }) {
         <span className="lab-muted">recomputed as you move the sliders</span>
       </div>
 
-      <Equation label="what the controls compose into">
-        {'p′(token) = renormalise( truncate( exp((ℓ / T) − max) / Z ) )'}
-      </Equation>
-      <SymbolTable symbols={SYMBOLS} />
+      {pipeline && (
+        <>
+          <Equation label="what the controls compose into" note={pipeline.note}>
+            {pipeline.formula}
+          </Equation>
+          <SymbolTable symbols={pipeline.symbols} />
+          <ol className="dl-order">
+            {pipeline.order.map((stage, index) => <li key={index}>{stage}</li>)}
+          </ol>
+        </>
+      )}
 
       <Substitution
         title={`Every step for ${candidate.token === ' ' ? '␣' : JSON.stringify(candidate.token)}`}
@@ -332,7 +331,8 @@ export default function DecodeLab({ onBack }) {
             </section>
           </div>
 
-          <WorkedToken result={result} settings={settings} prompt={prompt} candidate={focused} />
+          <WorkedToken result={result} settings={settings} prompt={prompt}
+                       candidate={focused} pipeline={controls?.pipeline} />
 
           <div className="lab-card">
             <div className="lab-card-head"><h3>What each control does</h3></div>
@@ -342,7 +342,12 @@ export default function DecodeLab({ onBack }) {
                   <h4>{control.name}</h4>
                   <code className="dl-formula">{control.formula}</code>
                   <p>{control.summary}</p>
+                  <SymbolTable symbols={control.symbols} />
+                  <Derivation steps={control.derivation} />
                   <p className="lab-muted"><strong>Why:</strong> {control.why}</p>
+                  {control.at_extremes && (
+                    <p className="lab-muted"><strong>At the extremes:</strong> {control.at_extremes}</p>
+                  )}
                   <p className="dl-misconception">{control.misconception}</p>
                 </article>
               ))}

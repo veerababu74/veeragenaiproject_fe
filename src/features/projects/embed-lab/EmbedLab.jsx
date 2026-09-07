@@ -1,20 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Boxes, KeyRound, Loader2, Play, Ruler, Sigma, TriangleAlert } from 'lucide-react'
+import { Boxes, ChevronDown, KeyRound, Loader2, Play, Ruler, Sigma, TriangleAlert } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
 import LabShell from '../lab-shell/LabShell'
-import { Equation, Substitution, SymbolTable, fixed } from '../lab-shell/math'
+import { Derivation, Equation, Substitution, SymbolTable, fixed } from '../lab-shell/math'
 import './EmbedLab.css'
 
 const api = createLabsApi('embedlab').request
 
 const blankModel = () => ({ provider: 'openai', model: 'text-embedding-3-small', api_key: '' })
-
-const METRIC_SYMBOLS = [
-  { symbol: 'q', means: 'the query vector, as the model encoded it' },
-  { symbol: 'c', means: 'one chunk\u2019s vector' },
-  { symbol: 'q · c', means: 'their dot product — one multiply-add per dimension' },
-  { symbol: '‖q‖, ‖c‖', means: 'the two vector lengths' },
-]
 
 /* Why the three metrics are one computation.
  *
@@ -23,7 +16,7 @@ const METRIC_SYMBOLS = [
  * lengths generate all three, and writing them out that way is the whole
  * explanation of why they agree exactly on normalised vectors and can disagree
  * otherwise. */
-function MetricMath({ model, chunk, chunkIndex }) {
+function MetricMath({ model, chunk, chunkIndex, concepts }) {
   const terms = model.metrics.terms
   if (!terms || chunkIndex === undefined) return null
 
@@ -39,12 +32,12 @@ function MetricMath({ model, chunk, chunkIndex }) {
         <span className="lab-muted">{model.label} · chunk #{chunk.id}</span>
       </div>
 
-      <Equation label="all three, from the same three numbers">
-        {'cosine    = (q · c) / (‖q‖ ‖c‖)\n'
-         + 'dot       = q · c\n'
-         + 'euclidean = − √(‖q‖² + ‖c‖² − 2 (q · c))'}
-      </Equation>
-      <SymbolTable symbols={METRIC_SYMBOLS} />
+      {concepts?.shared_terms && (
+        <Equation label={concepts.shared_terms.claim} note={concepts.shared_terms.consequence}>
+          {concepts.shared_terms.formula}
+        </Equation>
+      )}
+      <SymbolTable symbols={concepts?.metrics?.[0]?.symbols} />
 
       <Substitution
         title={`The arithmetic for chunk #${chunk.id}`}
@@ -74,8 +67,72 @@ function MetricMath({ model, chunk, chunkIndex }) {
   )
 }
 
+/* What every number in the results table means, and how it is computed.
+ *
+ * The evaluation column is the reason this exists. "reciprocal rank 0.33" is
+ * meaningless until you know it is one divided by the rank of the first correct
+ * answer — and the lab was printing it bare. */
+function Reference({ concepts }) {
+  const [open, setOpen] = useState('')
+
+  const sections = [
+    { id: 'metrics', title: 'How chunks are scored', items: concepts.metrics },
+    { id: 'evaluation', title: 'How a run is judged', items: concepts.evaluation },
+  ]
+
+  return (
+    <div className="lab-card el-reference">
+      <div className="lab-card-head">
+        <h3><Sigma size={15} /> The mathematics</h3>
+        <span className="lab-muted">every number in the table below, defined</span>
+      </div>
+
+      {sections.map((section) => (
+        <div key={section.id}>
+          <h5 className="lab-subhead">{section.title}</h5>
+          {section.items.map((item) => {
+            const isOpen = open === item.id
+            return (
+              <article className={`el-concept ${isOpen ? 'open' : ''}`} key={item.id}>
+                <button onClick={() => setOpen(isOpen ? '' : item.id)}>
+                  <div>
+                    <h4>{item.name}</h4>
+                    {item.tagline && <p>{item.tagline}</p>}
+                  </div>
+                  <code>{item.formula}</code>
+                  <ChevronDown size={15} className="el-chevron" />
+                </button>
+                {isOpen && (
+                  <div className="el-concept-body">
+                    {item.summary && <p>{item.summary}</p>}
+                    <SymbolTable symbols={item.symbols} />
+                    <Derivation steps={item.derivation} />
+                    {item.range && <p className="lab-note"><strong>Range:</strong> {item.range}</p>}
+                    <p className="lab-note"><strong>Why:</strong> {item.why}</p>
+                    {item.misconception && (
+                      <p className="el-misconception">
+                        <TriangleAlert size={13} /> {item.misconception}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </article>
+            )
+          })}
+        </div>
+      ))}
+
+      <h5 className="lab-subhead">Whether a model normalises</h5>
+      <code className="el-formula">{concepts.vector_stats.formula}</code>
+      <p className="lab-note">{concepts.vector_stats.why}</p>
+      <p className="lab-note lab-muted">{concepts.vector_stats.note}</p>
+    </div>
+  )
+}
+
 export default function EmbedLab({ onBack }) {
   const [catalog, setCatalog] = useState(null)
+  const [concepts, setConcepts] = useState(null)
   const [corpora, setCorpora] = useState([])
   const [corpusId, setCorpusId] = useState('support')
   const [queryIndex, setQueryIndex] = useState(0)
@@ -86,10 +143,11 @@ export default function EmbedLab({ onBack }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    Promise.all([api('/providers'), api('/corpora')])
-      .then(([providerData, corpusData]) => {
+    Promise.all([api('/providers'), api('/corpora'), api('/concepts')])
+      .then(([providerData, corpusData, conceptData]) => {
         setCatalog(providerData)
         setCorpora(corpusData.corpora)
+        setConcepts(conceptData)
       })
       .catch((requestError) => setError(requestError.message))
   }, [])
@@ -225,6 +283,8 @@ export default function EmbedLab({ onBack }) {
         </p>
       </div>
 
+      {concepts && <Reference concepts={concepts} />}
+
       {result && (
         <>
           {result.failures.length > 0 && (
@@ -291,7 +351,7 @@ export default function EmbedLab({ onBack }) {
 
           {result.models[0] && orderedChunks[0] && (
             <MetricMath model={result.models[0]} chunk={orderedChunks[0]}
-                        chunkIndex={orderedChunks[0].id} />
+                        chunkIndex={orderedChunks[0].id} concepts={concepts} />
           )}
 
           <div className="el-model-cards">

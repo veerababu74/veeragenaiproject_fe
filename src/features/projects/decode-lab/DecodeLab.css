@@ -93,3 +93,8 @@
 .dl-dist .lab-bars li { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; }
 .dl-dist .lab-bars li:hover { background: #f4f7ff; }
 .dl-dist .lab-bars li.dl-focused { background: #eaf0ff; box-shadow: inset 0 0 0 1px #cfdcff; }
+
+/* The order the controls apply in, stated as a sequence because the ordering is
+   the part readers most often get backwards. */
+.dl-order { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 5px; }
+.dl-order li { color: var(--lab-ink-2); font-size: 11.5px; line-height: 1.6; }

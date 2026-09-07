@@ -29,10 +29,34 @@ export function SymbolTable({ symbols }) {
       {symbols.map((entry) => (
         <div key={entry.symbol}>
           <dt><code>{entry.symbol}</code></dt>
-          <dd>{entry.means}</dd>
+          <dd>
+            {entry.means}
+            {entry.shape && <span className="lab-symbol-shape">{entry.shape}</span>}
+          </dd>
         </div>
       ))}
     </dl>
+  )
+}
+
+/** The equation decomposed into the operations actually performed, in order.
+ *  Distinct from `Substitution`: this is still the general statement, and it is
+ *  the same for every input. */
+export function Derivation({ steps }) {
+  if (!steps?.length) return null
+  return (
+    <ol className="lab-derivation">
+      {steps.map((step, index) => (
+        <li key={index}>
+          <div className="lab-derivation-head">
+            <span className="lab-derivation-index">{index + 1}</span>
+            <h6>{step.label}</h6>
+          </div>
+          <code className="lab-derivation-expression">{step.expression}</code>
+          {step.note && <p>{step.note}</p>}
+        </li>
+      ))}
+    </ol>
   )
 }
 
