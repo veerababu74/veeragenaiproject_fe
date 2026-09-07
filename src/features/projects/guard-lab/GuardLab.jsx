@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  Eye, Loader2, ScanLine, Shield, ShieldAlert, ShieldCheck, TriangleAlert,
+  Eye, Loader2, ScanLine, Shield, ShieldAlert, ShieldCheck, Sigma, TriangleAlert,
 } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
 import LabShell from '../lab-shell/LabShell'
+import { Equation, Substitution } from '../lab-shell/math'
 import './GuardLab.css'
 
 const api = createLabsApi('guardlab').request
@@ -18,6 +19,60 @@ const TABS = [
 const riskTag = (level) => (
   level === 'high' ? 'bad' : level === 'medium' ? 'warn' : level === 'low' ? 'neutral' : 'good'
 )
+
+/* How the number was arrived at.
+ *
+ * A score of 0.85 labelled "high" is not something a reader can argue with, and
+ * a lab about not trusting inputs is a poor place to ask for trust. The server
+ * returns the terms it summed, so the sum can be shown: which match supplied the
+ * base, what the weaker ones contributed, and which threshold the level was read
+ * off. Every number here comes from the scan, not from recomputing it. */
+function ScoreBreakdown({ risk }) {
+  if (!risk?.terms) return null
+
+  const sign = (term) => (term.operation === 'add' ? '+' : term.operation === 'base' ? '' : '→')
+
+  return (
+    <div className="gl-scoremath">
+      <h5 className="lab-subhead"><Sigma size={13} /> How this score was built</h5>
+
+      <Equation label="the rule">
+        {'score = w₁ + 0.15 Σ wᵢ  + 0.1 × obfuscations,  capped at 1.0\n'
+         + 'a decoded payload that is itself an injection raises the floor to 0.9'}
+      </Equation>
+
+      {risk.terms.length === 0 ? (
+        <p className="lab-note">
+          Nothing scored. No injection pattern matched and no obfuscation was found, so the sum
+          starts and ends at zero.
+        </p>
+      ) : (
+        <Substitution
+          title="The terms, in the order they were applied"
+          rows={[
+            ...risk.terms.map((term) => ({
+              label: term.operation,
+              expression: `${sign(term)} ${term.expression}`.trim(),
+              result: term.value,
+              note: term.label,
+            })),
+            { label: 'total', expression: 'the sum above, capped at 1.0', result: risk.score },
+          ]}
+          footnote={`Level: ${risk.level} — ${risk.band_reason}. The bands are ${
+            risk.bands.map((band) => `${band.level} at ${band.at_least}`).join(', ')
+          }, and anything above zero that is under them is "low".`}
+        />
+      )}
+
+      <p className="lab-note">
+        Only the strongest match counts in full; every other one is worth {0.15} of itself. That is
+        deliberate — without it, a payload that trips five weak heuristics would outscore one
+        containing a single unmistakable instruction, and the ranking would reward quantity of
+        suspicion over quality of evidence.
+      </p>
+    </div>
+  )
+}
 
 /* The risk score measures injection, so a payload whose only problem is
  * personal data scores zero — correctly. Reporting that as "passed" would imply
@@ -221,6 +276,7 @@ function Scanner() {
               : <span className="lab-tag good">would pass</span>}
           </div>
           <Signals scan={result} />
+          <ScoreBreakdown risk={result.risk} />
           {result.normalisation?.caught_only_after_normalisation && (
             <p className="gl-highlight">
               <TriangleAlert size={13} /> {result.normalisation.note}

@@ -88,3 +88,8 @@
   .dl-grid { grid-template-columns: 1fr; }
   .dl-teaches { grid-template-columns: 1fr; }
 }
+
+/* Bars are selectable: clicking one drives the worked arithmetic below. */
+.dl-dist .lab-bars li { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; }
+.dl-dist .lab-bars li:hover { background: #f4f7ff; }
+.dl-dist .lab-bars li.dl-focused { background: #eaf0ff; box-shadow: inset 0 0 0 1px #cfdcff; }

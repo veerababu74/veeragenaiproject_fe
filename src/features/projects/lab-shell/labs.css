@@ -178,3 +178,78 @@
   .lab-app { height: auto; min-height: calc(100vh - 80px); border-radius: 0; }
   .lab-header-meta { width: 100%; margin-left: 0; }
 }
+
+/* ── showing the working ─────────────────────────────────────────────────────
+ * The equation in symbols, then the equation with this page's numbers. The
+ * second is tinted because it is the half that changes as the controls move. */
+
+.lab-equation {
+  margin: 10px 0; padding: 11px 13px; border-left: 3px solid var(--royal);
+  border-radius: 0 8px 8px 0; background: var(--ice);
+}
+.lab-equation-label {
+  display: block; margin-bottom: 5px; color: var(--periwinkle);
+  font-size: 9.5px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase;
+}
+.lab-equation code {
+  display: block; color: var(--navy); font-size: 12.5px; font-weight: 700; line-height: 1.7;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace; white-space: pre-wrap;
+}
+.lab-equation-note { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+
+.lab-symbols {
+  margin: 8px 0 0; display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+}
+.lab-symbols > div {
+  display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 10px;
+  align-items: baseline; padding: 7px 11px; background: var(--white);
+}
+.lab-symbols dt { margin: 0; }
+.lab-symbols dt code {
+  color: var(--royal); font-size: 12px; font-weight: 700;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.lab-symbols dd { margin: 0; color: var(--lab-ink-2); font-size: 11.5px; line-height: 1.55; }
+
+.lab-substitution {
+  margin: 12px 0 0; padding: 11px 12px; border: 1px solid #cfdcff;
+  border-radius: 9px; background: #f4f7ff;
+}
+.lab-substitution-title {
+  margin: 0 0 8px; color: var(--royal); font-size: 10px; font-weight: 900;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.lab-substitution ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.lab-substitution li {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr) auto;
+  gap: 4px 10px; align-items: baseline;
+  padding: 6px 9px; border-radius: 6px; background: var(--white); border: 1px solid #e4ebff;
+}
+/* A candidate that was computed and then truncated away. Struck rather than
+ * hidden: that it was computed first is the thing worth seeing. */
+.lab-substitution li.dropped { background: #faf9f7; border-color: var(--line); opacity: .72; }
+.lab-substitution li.dropped .lab-sub-expression { text-decoration: line-through; }
+.lab-sub-label {
+  color: var(--muted); font-size: 9.5px; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.lab-sub-expression {
+  min-width: 0; color: var(--lab-ink-2); font-size: 11.5px; line-height: 1.6;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.lab-sub-result {
+  color: var(--royal); font-size: 12px; font-weight: 800;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.lab-sub-note { grid-column: 2 / -1; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+.lab-substitution .lab-note { margin-top: 8px; font-size: 11px; }
+
+@media (max-width: 900px) {
+  .lab-symbols > div { grid-template-columns: 1fr; gap: 3px; }
+  .lab-substitution li { grid-template-columns: 1fr; }
+  .lab-sub-result { justify-self: start; }
+  .lab-sub-note { grid-column: 1; }
+}

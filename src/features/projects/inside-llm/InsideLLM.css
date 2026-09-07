@@ -125,6 +125,133 @@
 }
 .ill-formula-block span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
 
+/* ── the mathematics ─────────────────────────────────────────────────────────
+ * Three registers, deliberately distinct so a reader can tell at a glance which
+ * one they are looking at: the equation in symbols, the operations it decomposes
+ * into, and the same operations with this example's numbers substituted in.
+ * The substitution block is tinted differently from the other two because it is
+ * the only one whose content changes when the example does. */
+
+.ill-math-head { display: flex; align-items: center; gap: 5px; }
+.ill-math-head svg { color: var(--royal); }
+
+.ill-equation {
+  margin: 10px 0; padding: 12px 14px; border-left: 3px solid var(--royal);
+  border-radius: 0 8px 8px 0; background: var(--ice);
+}
+.ill-equation-label {
+  display: block; margin-bottom: 5px; color: var(--periwinkle);
+  font-size: 9.5px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase;
+}
+.ill-equation code {
+  display: block; color: var(--navy); font-size: 13px; font-weight: 700; line-height: 1.7;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace; white-space: pre-wrap;
+}
+.ill-equation-note { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+
+/* The symbol glossary. Definition list rather than a table: the shapes are the
+ * point, and they read better hung off the term than boxed in a column. */
+.ill-symbols { margin: 8px 0 0; display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.ill-symbols > div {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px;
+  align-items: baseline; padding: 7px 11px; background: var(--white);
+}
+.ill-symbols dt { margin: 0; }
+.ill-symbols dt code {
+  color: var(--royal); font-size: 12px; font-weight: 700;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.ill-symbols dd {
+  margin: 0; color: var(--ill-ink-2); font-size: 11.5px; line-height: 1.55;
+}
+.ill-symbol-shape {
+  display: inline-block; margin-left: 7px; padding: 1px 6px; border-radius: 4px;
+  background: var(--ice); color: var(--muted); font-size: 10px; font-weight: 700;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* The equation broken into the operations actually performed, in order. */
+.ill-derivation { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.ill-derivation > li {
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcff;
+}
+.ill-derivation-head { display: flex; align-items: center; gap: 7px; }
+.ill-derivation-index {
+  width: 17px; height: 17px; flex: 0 0 auto; display: grid; place-items: center;
+  border-radius: 5px; background: var(--royal); color: var(--white);
+  font-size: 9.5px; font-weight: 900; font-variant-numeric: tabular-nums;
+}
+.ill-derivation h6 {
+  margin: 0; color: var(--navy); font-size: 11px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.ill-derivation-expression {
+  display: block; margin: 7px 0 0; padding: 7px 9px; border-radius: 6px;
+  background: var(--white); border: 1px solid var(--line);
+  color: var(--navy); font-size: 12px; line-height: 1.75;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  white-space: pre-wrap; overflow-x: auto;
+}
+.ill-derivation p {
+  margin: 6px 0 0 !important; color: var(--ill-ink-2); font-size: 11.5px; line-height: 1.6;
+}
+
+/* The same steps, with numbers. Tinted so it is never mistaken for the general
+ * statement above it — everything in here is specific to the loaded example. */
+.ill-substitution {
+  margin: 12px 0 0; padding: 11px 12px; border: 1px solid #cfdcff;
+  border-radius: 9px; background: #f4f7ff;
+}
+.ill-substitution-title {
+  margin: 0 0 8px; color: var(--royal); font-size: 10px; font-weight: 900;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.ill-substitution ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.ill-substitution li {
+  display: grid; grid-template-columns: 84px minmax(0, 1fr) auto;
+  gap: 4px 10px; align-items: baseline;
+  padding: 6px 9px; border-radius: 6px; background: var(--white);
+  border: 1px solid #e4ebff;
+}
+.ill-sub-label {
+  color: var(--muted); font-size: 9.5px; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.ill-sub-expression {
+  min-width: 0; color: var(--ill-ink-2); font-size: 11.5px; line-height: 1.6;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.ill-sub-result {
+  color: var(--royal); font-size: 12px; font-weight: 800;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ill-sub-note {
+  grid-column: 2 / -1; color: var(--muted); font-size: 10.5px; line-height: 1.5;
+}
+.ill-substitution .ill-note { margin-top: 8px; font-size: 11px; }
+
+/* Wide tables (the drift and residual ledgers) scroll on their own rather than
+ * pushing the page sideways. */
+.ill-table-scroll { overflow-x: auto; margin-top: 8px; }
+.ill-table-scroll .ill-worked-table { min-width: 380px; }
+
+/* The four stages of layer normalisation, stacked so the same dimensions line
+ * up vertically and the effect of each stage is readable down a column. */
+.ill-lnrow { display: grid; gap: 7px; margin-top: 4px; }
+
+.ill-worked-table td.ill-up { color: #1a7f4b; font-weight: 700; }
+.ill-worked-table td.ill-down { color: #b4443f; font-weight: 700; }
+
+@media (max-width: 900px) {
+  .ill-symbols > div { grid-template-columns: 1fr; gap: 3px; }
+  .ill-substitution li { grid-template-columns: 1fr; }
+  .ill-sub-result { justify-self: start; }
+  .ill-sub-note { grid-column: 1; }
+}
+
 /* ── walkthrough ────────────────────────────────────────────────────────── */
 
 .ill-walkthrough { display: grid; gap: 11px; max-width: 1180px; margin: 0 auto; }
@@ -219,13 +346,13 @@
   color: var(--ill-ink-2); font-size: 10.5px;
   font-family: ui-monospace, monospace; word-break: break-all;
 }
-.ill-symbols { display: flex; flex-wrap: wrap; gap: 4px; }
-.ill-symbols code {
+.ill-symbols-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.ill-symbols-row code {
   padding: 3px 7px; border-radius: 5px; background: var(--white); border: 1px solid var(--line);
   color: var(--navy); font-size: 11.5px; font-family: ui-monospace, monospace;
 }
-.ill-symbols code.ill-final { background: var(--royal); color: var(--white); border-color: var(--royal); }
-.ill-symbols code.ill-final small { color: #c9d4ff; margin-left: 4px; font-size: 9px; }
+.ill-symbols-row code.ill-final { background: var(--royal); color: var(--white); border-color: var(--royal); }
+.ill-symbols-row code.ill-final small { color: #c9d4ff; margin-left: 4px; font-size: 9px; }
 .ill-merge-detail { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ill-merge-detail svg { color: var(--muted); }
 .ill-merge-detail > span { color: var(--muted); font-size: 11px; }

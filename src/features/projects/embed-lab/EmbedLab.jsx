@@ -1,12 +1,78 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Boxes, KeyRound, Loader2, Play, Ruler, TriangleAlert } from 'lucide-react'
+import { Boxes, KeyRound, Loader2, Play, Ruler, Sigma, TriangleAlert } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
 import LabShell from '../lab-shell/LabShell'
+import { Equation, Substitution, SymbolTable, fixed } from '../lab-shell/math'
 import './EmbedLab.css'
 
 const api = createLabsApi('embedlab').request
 
 const blankModel = () => ({ provider: 'openai', model: 'text-embedding-3-small', api_key: '' })
+
+const METRIC_SYMBOLS = [
+  { symbol: 'q', means: 'the query vector, as the model encoded it' },
+  { symbol: 'c', means: 'one chunk\u2019s vector' },
+  { symbol: 'q · c', means: 'their dot product — one multiply-add per dimension' },
+  { symbol: '‖q‖, ‖c‖', means: 'the two vector lengths' },
+]
+
+/* Why the three metrics are one computation.
+ *
+ * A ranking table shows three columns of scores and invites the reading that
+ * three different things were measured. They were not: one dot product and two
+ * lengths generate all three, and writing them out that way is the whole
+ * explanation of why they agree exactly on normalised vectors and can disagree
+ * otherwise. */
+function MetricMath({ model, chunk, chunkIndex }) {
+  const terms = model.metrics.terms
+  if (!terms || chunkIndex === undefined) return null
+
+  const dotProduct = terms.dot[chunkIndex]
+  const queryNorm = terms.query_norm
+  const chunkNorm = terms.chunk_norms[chunkIndex]
+  const euclidean = -Math.sqrt(Math.max(0, queryNorm ** 2 + chunkNorm ** 2 - 2 * dotProduct))
+
+  return (
+    <div className="lab-card">
+      <div className="lab-card-head">
+        <h3><Sigma size={15} /> How the three scores are computed</h3>
+        <span className="lab-muted">{model.label} · chunk #{chunk.id}</span>
+      </div>
+
+      <Equation label="all three, from the same three numbers">
+        {'cosine    = (q · c) / (‖q‖ ‖c‖)\n'
+         + 'dot       = q · c\n'
+         + 'euclidean = − √(‖q‖² + ‖c‖² − 2 (q · c))'}
+      </Equation>
+      <SymbolTable symbols={METRIC_SYMBOLS} />
+
+      <Substitution
+        title={`The arithmetic for chunk #${chunk.id}`}
+        rows={[
+          { label: 'dot', expression: `q · c over ${model.vectors.dims} dimensions`,
+            result: fixed(dotProduct, 4) },
+          { label: 'lengths', expression: `‖q‖ = ${fixed(queryNorm, 4)},  ‖c‖ = ${fixed(chunkNorm, 4)}` },
+          { label: 'cosine', expression: `${fixed(dotProduct, 4)} / (${fixed(queryNorm, 4)} × ${fixed(chunkNorm, 4)})`,
+            result: fixed(model.metrics.cosine.scores[chunkIndex], 4) },
+          { label: 'dot', expression: 'the same product, undivided',
+            result: fixed(model.metrics.dot.scores[chunkIndex], 4) },
+          { label: 'euclidean',
+            expression: `− √(${fixed(queryNorm ** 2, 3)} + ${fixed(chunkNorm ** 2, 3)} − 2 × ${fixed(dotProduct, 3)})`,
+            result: fixed(euclidean, 4),
+            note: `the payload records ${fixed(model.metrics.euclidean.scores[chunkIndex], 4)}` },
+        ]}
+        footnote={model.vectors.normalised
+          ? `This model returns unit-length vectors (‖c‖ varies by only ${model.vectors.norm_spread}),
+             so ‖q‖ ‖c‖ ≈ 1 and the cosine and the dot product are the same number. Euclidean then
+             reduces to √(2 − 2 cos), which is monotonic in the cosine — so all three orderings are
+             forced to be identical. Switching metrics above cannot change this model's ranking.`
+          : `This model's vector lengths vary by ${model.vectors.norm_spread}, so ‖q‖ ‖c‖ is not 1
+             and the division actually changes something. That is the entire reason the three
+             columns can rank the same chunks differently.`}
+      />
+    </div>
+  )
+}
 
 export default function EmbedLab({ onBack }) {
   const [catalog, setCatalog] = useState(null)
@@ -222,6 +288,11 @@ export default function EmbedLab({ onBack }) {
               </table>
             </div>
           </div>
+
+          {result.models[0] && orderedChunks[0] && (
+            <MetricMath model={result.models[0]} chunk={orderedChunks[0]}
+                        chunkIndex={orderedChunks[0].id} />
+          )}
 
           <div className="el-model-cards">
             {result.models.map((model) => (

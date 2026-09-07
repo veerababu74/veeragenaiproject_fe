@@ -44,3 +44,8 @@
 
 .gl-result { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line); }
 .gl-verdict { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 9px; }
+
+/* The score's own arithmetic, set apart from the findings it was computed from. */
+.gl-scoremath { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.gl-scoremath .lab-subhead { display: flex; align-items: center; gap: 5px; }
+.gl-scoremath .lab-subhead svg { color: var(--royal); }

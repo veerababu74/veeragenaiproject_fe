@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Dices, Loader2, RotateCcw, Sliders, Thermometer } from 'lucide-react'
+import { Dices, Loader2, RotateCcw, Sigma, Sliders, Thermometer } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
 import LabShell from '../lab-shell/LabShell'
+import { Equation, Substitution, SymbolTable, probability } from '../lab-shell/math'
 import { applySampling, drawSample } from './sampling'
 import './DecodeLab.css'
 
@@ -12,6 +13,107 @@ const SHOWN = 14
 
 const showSpace = (text) => (text ? text.replaceAll(' ', '␣').replaceAll('\n', '⏎') : text)
 
+const SYMBOLS = [
+  { symbol: 'ℓ', means: 'the raw logit GPT-2 produced for this token — an unbounded score' },
+  { symbol: 'T', means: 'temperature, the number every logit is divided by' },
+  { symbol: 'Z', means: 'the partition function: the sum of every exponential, tail included' },
+  { symbol: 'p', means: 'the probability before truncation' },
+  { symbol: 'p′', means: 'the probability after the survivors are renormalised — what is sampled' },
+]
+
+/* One token, all the way through.
+ *
+ * The bars show where a token ended up; this shows how it got there. Every value
+ * is taken from the same computation that drew the bars, so moving a slider
+ * moves these numbers too — which is the only way to see that temperature acts
+ * before the exponential and truncation acts after it. */
+function WorkedToken({ result, settings, prompt, candidate }) {
+  if (!candidate) return null
+
+  const { stats } = result
+  const penalised = candidate.penalised !== candidate.logit
+  const repeated = prompt.prompt_tokens.some((token) => token.id === candidate.id)
+  const survivors = result.candidates.filter((item) => item.kept).length
+
+  const rows = [
+    { label: 'logit', expression: `ℓ = ${candidate.logit.toFixed(3)}`,
+      note: 'what the model actually produced, before any control touched it' },
+    ...(penalised ? [{
+      label: 'penalty',
+      expression: candidate.logit > 0
+        ? `${candidate.logit.toFixed(3)} / ${settings.repetition_penalty}`
+        : `${candidate.logit.toFixed(3)} × ${settings.repetition_penalty}`,
+      result: candidate.penalised.toFixed(3),
+      note: 'this token is already in the prompt, so it is pushed down',
+    }] : []),
+    { label: 'temperature', expression: `${candidate.penalised.toFixed(3)} / ${stats.temperature}`,
+      result: candidate.scaled.toFixed(3) },
+    { label: 'exponentiate', expression: `exp(${candidate.scaled.toFixed(3)} − ${stats.shift.toFixed(3)})`,
+      result: candidate.exponential.toExponential(3),
+      note: 'the largest scaled logit is subtracted first, which cancels in the division below' },
+    { label: 'normalise', expression: `${candidate.exponential.toExponential(3)} / ${stats.partition.toFixed(4)}`,
+      result: probability(candidate.probability),
+      note: `Z covers all ${prompt.vocab_size.toLocaleString()} tokens, not just the ${
+        stats.totalCount} drawn above — the ones below the top ${
+        stats.totalCount} enter through the histogram the server ships with them` },
+  ]
+
+  if (!candidate.kept) {
+    rows.push({
+      label: 'truncate', dropped: true,
+      expression: settings.top_k > 0 && settings.top_p < 1
+        ? `cut by top-k = ${settings.top_k} or top-p = ${settings.top_p}`
+        : settings.top_k > 0 ? `outside the top ${settings.top_k}` : `outside the nucleus p = ${settings.top_p}`,
+      result: '0',
+      note: 'computed in full, then discarded — truncation happens after the softmax, not before',
+    })
+  } else {
+    rows.push({
+      label: 'renormalise',
+      expression: `${candidate.probability.toExponential(3)} / ${stats.keptMass.toFixed(4)}`,
+      result: probability(candidate.finalProbability),
+      note: `${survivors} candidates survived and share the mass the cut ones gave up`,
+    })
+  }
+
+  return (
+    <div className="lab-card">
+      <div className="lab-card-head">
+        <h3><Sigma size={15} /> The arithmetic, for one token</h3>
+        <span className="lab-muted">recomputed as you move the sliders</span>
+      </div>
+
+      <Equation label="what the controls compose into">
+        {'p′(token) = renormalise( truncate( exp((ℓ / T) − max) / Z ) )'}
+      </Equation>
+      <SymbolTable symbols={SYMBOLS} />
+
+      <Substitution
+        title={`Every step for ${candidate.token === ' ' ? '␣' : JSON.stringify(candidate.token)}`}
+        rows={rows}
+        footnote={repeated
+          ? 'This token appears in the prompt, so the repetition penalty applies to it. Set the penalty to 1.0 and the first row below the logit disappears.'
+          : 'This token is not in the prompt, so the repetition penalty leaves it alone whatever it is set to.'}
+      />
+
+      <Substitution
+        title="And the distribution as a whole"
+        rows={[
+          { label: 'kept', expression: `${stats.keptCount} of ${stats.totalCount} shipped candidates`,
+            result: `${(stats.keptMass * 100).toFixed(1)}% of the mass` },
+          { label: 'entropy', expression: 'H = − Σ p log p', result: `${stats.entropy.toFixed(3)} nats`,
+            note: 'over the survivors, after renormalising' },
+          { label: 'effective', expression: `e^H = e^${stats.entropy.toFixed(3)}`,
+            result: stats.effectiveChoices.toFixed(1),
+            note: 'how many equally-likely options this distribution is worth — 1.0 means decided' },
+          { label: 'unshown tail', expression: 'mass below the shipped top 200',
+            result: `${(stats.tailMass * 100).toFixed(1)}%` },
+        ]}
+      />
+    </div>
+  )
+}
+
 export default function DecodeLab({ onBack }) {
   const [overview, setOverview] = useState(null)
   const [controls, setControls] = useState(null)
@@ -20,6 +122,9 @@ export default function DecodeLab({ onBack }) {
   const [prompt, setPrompt] = useState(null)
   const [settings, setSettings] = useState(DEFAULTS)
   const [drawn, setDrawn] = useState(null)
+  // Which candidate the worked arithmetic below is about. Null means "whichever
+  // is currently on top", so the panel is never empty and never stale.
+  const [focusId, setFocusId] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -36,6 +141,7 @@ export default function DecodeLab({ onBack }) {
   useEffect(() => {
     setLoading(true)
     setDrawn(null)
+    setFocusId(null)
     api(`/prompts/${promptId}`)
       .then(setPrompt)
       .catch((requestError) => setError(requestError.message))
@@ -64,6 +170,9 @@ export default function DecodeLab({ onBack }) {
 
   const active = index.find((item) => item.id === promptId)
   const maxProbability = visible[0]?.probability || 1
+  const focused = result
+    ? result.candidates.find((candidate) => candidate.id === focusId) || visible[0]
+    : null
 
   const setControl = (key, value) => {
     setSettings((current) => ({ ...current, [key]: value }))
@@ -190,7 +299,11 @@ export default function DecodeLab({ onBack }) {
 
               <ul className="lab-bars">
                 {visible.map((candidate) => (
-                  <li key={candidate.id} className={candidate.kept ? '' : 'dl-dropped'}>
+                  <li key={candidate.id}
+                      className={`${candidate.kept ? '' : 'dl-dropped'} ${
+                        focused?.id === candidate.id ? 'dl-focused' : ''}`}
+                      onClick={() => setFocusId(candidate.id)}
+                      title="Show the arithmetic for this token">
                     <code className="lab-bar-label">{showSpace(candidate.token)}</code>
                     <div className="lab-bar-track">
                       <div className={`lab-bar-fill ${candidate.kept ? '' : 'dropped'}`}
@@ -208,7 +321,7 @@ export default function DecodeLab({ onBack }) {
               <p className="lab-note">
                 Bar length is the probability <em>before</em> truncation; the number is what you would
                 actually sample after the survivors are renormalised. Grey bars were removed by top-k
-                or top-p.
+                or top-p. <strong>Click any bar</strong> to see its arithmetic worked out below.
               </p>
               {result.stats.tailMass > 0.25 && (
                 <p className="lab-note dl-warn">
@@ -218,6 +331,8 @@ export default function DecodeLab({ onBack }) {
               )}
             </section>
           </div>
+
+          <WorkedToken result={result} settings={settings} prompt={prompt} candidate={focused} />
 
           <div className="lab-card">
             <div className="lab-card-head"><h3>What each control does</h3></div>

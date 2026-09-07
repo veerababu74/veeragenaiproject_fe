@@ -51,6 +51,11 @@ export function applySampling(candidates, tail, options) {
 
   const withProbabilities = adjusted.map((candidate, index) => ({
     ...candidate,
+    // Every intermediate is kept, not just the result. The lab shows the chain
+    // logit -> penalty -> divide by T -> exp -> divide by Z, and it can only do
+    // that honestly if each stage is the value that actually fed the next.
+    scaled: scaled[index],
+    exponential: exponentials[index],
     probability: exponentials[index] / partition,
   }))
 
@@ -111,9 +116,14 @@ export function applySampling(candidates, tail, options) {
   return {
     candidates: result,
     stats: {
+      // The shift and the partition function, so the softmax can be written out
+      // with the same numbers the bars were drawn from.
+      shift: max,
+      partition,
+      temperature: t,
+      keptMass,
       keptCount: final.length,
       totalCount: candidates.length,
-      keptMass,
       entropyFull: shippedEntropy + tailEntropy,
       // How much of the distribution sits below the shipped top-200. Large here
       // means the display is a smaller share of the truth than it looks.
