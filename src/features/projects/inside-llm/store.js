@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 export const useInsideLLMStore = create((set) => ({
-  view: 'walkthrough',
+  view: 'run',
   setView: (view) => set({ view }),
 
   overview: null,

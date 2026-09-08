@@ -677,3 +677,150 @@ code.ill-merged {
   .ill-lens li { grid-template-columns: 1fr; gap: 4px; }
   .ill-examplebar select { min-width: 0; }
 }
+
+/* ── the run view ────────────────────────────────────────────────────────────
+ * A transport bar, a rail of every step, and one card showing the step you are
+ * on. The card keeps a fixed shape as the run advances — input row, output row,
+ * facts, note, always in the same places — because a layout that reflows on
+ * every tick is unreadable at 4x. */
+
+.ill-run { display: grid; gap: 10px; max-width: 1020px; margin: 0 auto; }
+
+.ill-run-bar {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--white);
+}
+.ill-run-play {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px;
+  border: 0; border-radius: 999px; background: var(--royal); color: var(--white);
+  font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.ill-run-play:hover { filter: brightness(1.08); }
+.ill-run-step {
+  display: grid; place-items: center; width: 31px; height: 31px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--white);
+  color: var(--navy); cursor: pointer;
+}
+.ill-run-step:hover:not(:disabled) { border-color: var(--royal); color: var(--royal); }
+.ill-run-step:disabled { opacity: .38; cursor: default; }
+
+.ill-run-speeds { display: flex; gap: 3px; margin-left: 4px; }
+.ill-run-speeds button {
+  padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--white);
+  color: var(--muted); font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.ill-run-speeds button.active { background: var(--ice); border-color: #cfdcff; color: var(--royal); }
+.ill-run-count {
+  margin-left: auto; color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.ill-run-count strong { color: var(--navy); }
+
+.ill-run-progress {
+  height: 3px; border-radius: 999px; background: var(--line); overflow: hidden;
+}
+.ill-run-progress-fill {
+  height: 100%; background: var(--royal); transition: width .18s ease-out;
+}
+
+/* One tick per step. The three phases are coloured differently so the twelve
+   identical layer blocks read as a repeating unit rather than a wall. */
+.ill-run-rail {
+  display: flex; gap: 2px; overflow-x: auto; padding: 3px 0 5px;
+}
+.ill-rail-tick {
+  flex: 1 0 6px; height: 15px; min-width: 6px; padding: 0;
+  border: 0; border-radius: 3px; background: var(--line); cursor: pointer;
+  transition: background .12s, transform .12s;
+}
+.ill-rail-tick.done { background: #b9cdf5; }
+.ill-rail-tick.in.done, .ill-rail-tick.out.done { background: #9ec5f4; }
+.ill-rail-tick.active { background: var(--royal); transform: scaleY(1.55); }
+.ill-rail-tick:hover { background: var(--periwinkle); }
+
+.ill-run-step-card {
+  padding: 15px 17px; border: 1px solid var(--line); border-radius: 12px; background: var(--white);
+}
+.ill-run-step-card > header {
+  display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 4px;
+}
+.ill-run-phase {
+  display: block; color: var(--periwinkle); font-size: 9.5px; font-weight: 900;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.ill-run-step-card h3 { margin: 3px 0 0; color: var(--navy); font-size: 16px; }
+.ill-run-guess {
+  margin-left: auto; display: flex; align-items: center; gap: 7px;
+  padding: 7px 11px; border-radius: 9px; background: var(--ice);
+}
+.ill-run-guess span {
+  color: var(--muted); font-size: 9.5px; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.ill-run-guess code {
+  color: var(--royal); font-size: 13px; font-weight: 800;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.ill-run-guess em {
+  color: var(--muted); font-size: 11px; font-style: normal; font-variant-numeric: tabular-nums;
+}
+
+/* in / + / out, labelled down the left edge so the chain is legible at a glance. */
+.ill-run-flow { display: grid; gap: 7px; margin-top: 10px; }
+.ill-run-row {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center;
+  padding: 8px 10px; border-radius: 9px; background: #fbfcff; border: 1px solid var(--line);
+}
+.ill-run-row.out { background: #f4f7ff; border-color: #cfdcff; }
+.ill-run-role {
+  display: grid; place-items: center; height: 20px; border-radius: 6px;
+  font-size: 9.5px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase;
+}
+.ill-run-role.in { background: var(--line); color: var(--ill-ink-2); }
+.ill-run-role.add { background: #e6f2e6; color: #1a7f4b; font-size: 14px; }
+.ill-run-role.out { background: var(--royal); color: var(--white); }
+.ill-run-row .ill-vector { margin: 0; }
+
+.ill-run-scalar { display: flex; align-items: baseline; gap: 9px; }
+.ill-run-scalar span { color: var(--muted); font-size: 11px; }
+.ill-run-scalar code {
+  color: var(--navy); font-size: 18px; font-weight: 800;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-variant-numeric: tabular-nums;
+}
+
+.ill-run-predictions { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ill-run-predictions li {
+  display: grid; grid-template-columns: 78px minmax(0, 1fr) 52px; gap: 9px; align-items: center;
+}
+.ill-run-predictions code {
+  color: var(--navy); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.ill-run-predbar { height: 9px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.ill-run-predbar i { display: block; height: 100%; background: var(--royal); }
+.ill-run-predictions em {
+  color: var(--ill-ink-2); font-size: 11px; font-style: normal;
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+
+.ill-run-facts {
+  margin: 11px 0 0; display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 9px; overflow: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+.ill-run-facts > div { padding: 8px 11px; background: var(--white); }
+.ill-run-facts dt {
+  color: var(--muted); font-size: 9.5px; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.ill-run-facts dd {
+  margin: 3px 0 0; color: var(--navy); font-size: 12.5px; font-weight: 700;
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+
+.ill-run-footnote { max-width: 74ch; }
+
+@media (max-width: 720px) {
+  .ill-run-count { margin-left: 0; width: 100%; }
+  .ill-run-guess { margin-left: 0; }
+  .ill-run-predictions li { grid-template-columns: 62px minmax(0, 1fr) 46px; }
+}

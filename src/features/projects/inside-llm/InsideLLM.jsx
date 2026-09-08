@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from 'react'
-import { ArrowLeft, Boxes, Brain, GitCompare, Grid3x3, Layers, Loader2 } from 'lucide-react'
+import { ArrowLeft, Boxes, Brain, GitCompare, Grid3x3, Layers, Loader2, PlayCircle } from 'lucide-react'
 import { insideLlmApi } from '../../../lib/insideLlmApi'
 import Architecture from './Architecture'
+import Run from './Run'
 import AttentionExplorer from './AttentionExplorer'
 import ModelComparison from './ModelComparison'
 import Walkthrough from './Walkthrough'
@@ -9,6 +10,9 @@ import { useInsideLLMStore } from './store'
 import './InsideLLM.css'
 
 const VIEWS = [
+  // The run comes first: "what happens, in order" is the question a reader
+  // arrives with, and the component gallery is the reference they want second.
+  { id: 'run', label: 'Run it', icon: PlayCircle },
   { id: 'walkthrough', label: 'Components', icon: Layers },
   { id: 'attention', label: 'Attention', icon: Grid3x3 },
   { id: 'architecture', label: 'Architecture', icon: Boxes },
@@ -102,6 +106,7 @@ export default function InsideLLM({ onBack }) {
         {loading && !example && (
           <div className="ill-loading"><Loader2 size={22} className="ill-spin" /> Loading the forward pass…</div>
         )}
+        {view === 'run' && <Run />}
         {view === 'walkthrough' && <Walkthrough onOpenExplorer={() => setView('attention')} />}
         {view === 'attention' && <AttentionExplorer />}
         {view === 'architecture' && <Architecture />}
