@@ -10,12 +10,13 @@ import DecodeLab from './decode-lab/DecodeLab'
 import EmbedLab from './embed-lab/EmbedLab'
 import GraphRag from './GraphRag'
 import GuardLab from './guard-lab/GuardLab'
+import MarketingCopilot from './marketing-copilot/MarketingCopilot'
 import InsideLLM from './inside-llm/InsideLLM'
 import SimpleAgent from './simple-agent/SimpleAgent'
 import WorkspaceAgent from './WorkspaceAgent'
 import './ProjectsPanel.css'
 
-const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration, 'simple-agent': SimpleAgent, 'inside-llm': InsideLLM, 'embed-lab': EmbedLab, 'decode-lab': DecodeLab, 'guard-lab': GuardLab }
+const PROJECT_COMPONENTS = { 'basic-chat': BasicChat, 'basic-rag': BasicRag, 'advanced-rag': AdvancedRag, 'google-workspace-agent': WorkspaceAgent, 'chunking-lab': ChunkingLab, 'graph-rag': GraphRag, 'agent-orchestration': AgentOrchestration, 'simple-agent': SimpleAgent, 'inside-llm': InsideLLM, 'embed-lab': EmbedLab, 'decode-lab': DecodeLab, 'guard-lab': GuardLab, 'marketing-copilot': MarketingCopilot }
 // Must stay below the number of published projects, or the pager renders stuck
 // at "Page 1 of 1" — which is what happened when this matched the count exactly.
 const PROJECT_PAGE_SIZE = 4
