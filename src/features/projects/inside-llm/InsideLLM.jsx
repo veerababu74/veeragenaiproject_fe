@@ -1,8 +1,9 @@
 import { useCallback, useEffect } from 'react'
-import { ArrowLeft, Boxes, Brain, GitCompare, Grid3x3, Layers, Loader2, PlayCircle } from 'lucide-react'
+import { ArrowLeft, Boxes, Brain, GitCompare, Grid3x3, Layers, Loader2, PlayCircle, Sparkles } from 'lucide-react'
 import { insideLlmApi } from '../../../lib/insideLlmApi'
 import Architecture from './Architecture'
 import Run from './Run'
+import Story from './Story'
 import AttentionExplorer from './AttentionExplorer'
 import ModelComparison from './ModelComparison'
 import Walkthrough from './Walkthrough'
@@ -10,8 +11,11 @@ import { useInsideLLMStore } from './store'
 import './InsideLLM.css'
 
 const VIEWS = [
-  // The run comes first: "what happens, in order" is the question a reader
-  // arrives with, and the component gallery is the reference they want second.
+  // Start here, and mean it. Every other view assumes the reader already knows
+  // what a transformer is; this one assumes nothing, so it is the default and
+  // the one a first-time visitor lands on.
+  { id: 'story', label: 'Start here', icon: Sparkles },
+  // Then the run: "what happens, in order", with the real numbers.
   { id: 'run', label: 'Run it', icon: PlayCircle },
   { id: 'walkthrough', label: 'Components', icon: Layers },
   { id: 'attention', label: 'Attention', icon: Grid3x3 },
@@ -106,6 +110,7 @@ export default function InsideLLM({ onBack }) {
         {loading && !example && (
           <div className="ill-loading"><Loader2 size={22} className="ill-spin" /> Loading the forward pass…</div>
         )}
+        {view === 'story' && <Story onOpenComponents={() => setView('walkthrough')} />}
         {view === 'run' && <Run />}
         {view === 'walkthrough' && <Walkthrough onOpenExplorer={() => setView('attention')} />}
         {view === 'attention' && <AttentionExplorer />}
