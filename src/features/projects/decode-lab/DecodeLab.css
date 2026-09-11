@@ -98,3 +98,32 @@
    the part readers most often get backwards. */
 .dl-order { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 5px; }
 .dl-order li { color: var(--lab-ink-2); font-size: 11.5px; line-height: 1.6; }
+
+/* ── story-only pieces ──────────────────────────────────────────────────── */
+
+.dl-story-dial {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 11px; align-items: center; margin-bottom: 16px;
+}
+.dl-story-dial span {
+  color: var(--muted); font-size: 10.5px; font-weight: 800;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.dl-story-dial input { accent-color: var(--royal); }
+.dl-story-dial strong {
+  min-width: 46px; padding: 4px 9px; border-radius: 7px; background: var(--ice);
+  color: var(--royal); font-size: 13px; font-weight: 800; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.dl-story-draws { display: grid; gap: 12px; justify-items: center; }
+.dl-story-draws .lab-primary { margin: 0; }
+.dl-story-draw-list {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 34px;
+}
+.dl-story-draw-list code {
+  padding: 6px 11px; border-radius: 8px; background: var(--ice); color: var(--navy);
+  font-size: 13px; font-weight: 700; font-family: ui-monospace, monospace;
+  animation: lab-story-rise .35s backwards cubic-bezier(.2, .8, .3, 1.3);
+}
+.dl-story-draw-list code:first-child { background: var(--royal); color: var(--white); }

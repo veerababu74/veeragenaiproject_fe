@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  ChevronDown, Eye, Loader2, ScanLine, Shield, ShieldAlert, ShieldCheck, Sigma, TriangleAlert,
+  ChevronDown, Eye, Loader2, ScanLine, Shield, ShieldAlert, ShieldCheck, Sigma, Sparkles,
+  TriangleAlert,
 } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
+import GuardStory from './GuardStory'
 import LabShell from '../lab-shell/LabShell'
 import { Derivation, Equation, Substitution, SymbolTable } from '../lab-shell/math'
 import './GuardLab.css'
@@ -10,6 +12,9 @@ import './GuardLab.css'
 const api = createLabsApi('guardlab').request
 
 const TABS = [
+  // First and default: the catalogue assumes you already believe there is a
+  // problem, and a newcomer does not yet.
+  { id: 'story', label: 'Start here', icon: Sparkles },
   { id: 'attacks', label: 'Attacks', icon: ShieldAlert },
   { id: 'bypasses', label: 'What gets through', icon: Eye },
   { id: 'defences', label: 'Defences', icon: ShieldCheck },
@@ -350,7 +355,7 @@ function Scanner({ concepts }) {
 }
 
 export default function GuardLab({ onBack }) {
-  const [view, setView] = useState('attacks')
+  const [view, setView] = useState('story')
   const [overview, setOverview] = useState(null)
   const [attacks, setAttacks] = useState(null)
   const [bypasses, setBypasses] = useState(null)
@@ -392,6 +397,7 @@ export default function GuardLab({ onBack }) {
       {!attacks && !error && (
         <div className="lab-loading"><Loader2 size={20} className="lab-spin" /> Scanning the corpus…</div>
       )}
+      {view === 'story' && <GuardStory onOpenLab={() => setView('attacks')} />}
       {view === 'attacks' && <Attacks data={attacks} />}
       {view === 'bypasses' && <Bypasses data={bypasses} />}
       {view === 'defences' && <Defences data={defences} />}

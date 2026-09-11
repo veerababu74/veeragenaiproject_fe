@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Dices, Loader2, RotateCcw, Sigma, Sliders, Thermometer } from 'lucide-react'
+import { Dices, Loader2, RotateCcw, Sigma, Sliders, Sparkles, Thermometer } from 'lucide-react'
 import { createLabsApi } from '../../../lib/labsApi'
 import LabShell from '../lab-shell/LabShell'
 import { Derivation, Equation, Substitution, SymbolTable, probability } from '../lab-shell/math'
+import DecodeStory from './DecodeStory'
 import { applySampling, drawSample } from './sampling'
 import './DecodeLab.css'
 
@@ -120,6 +121,9 @@ export default function DecodeLab({ onBack }) {
   const [promptId, setPromptId] = useState('cat')
   const [prompt, setPrompt] = useState(null)
   const [settings, setSettings] = useState(DEFAULTS)
+  // Start on the story. Someone who already knows what temperature does can
+  // reach the controls in one click; someone who does not would have bounced.
+  const [view, setView] = useState('story')
   const [drawn, setDrawn] = useState(null)
   // Which candidate the worked arithmetic below is about. Null means "whichever
   // is currently on top", so the panel is never empty and never stale.
@@ -196,6 +200,12 @@ export default function DecodeLab({ onBack }) {
         { label: 'GPT-2 small · real logits' },
         { label: 'computed in your browser', ghost: true },
       ]}
+      tabs={[
+        { id: 'story', label: 'Start here', icon: Sparkles },
+        { id: 'lab', label: 'The controls', icon: Sliders },
+      ]}
+      view={view}
+      onView={setView}
       footer={overview?.method}
     >
       {error && <p className="lab-error">{error}</p>}
@@ -221,7 +231,11 @@ export default function DecodeLab({ onBack }) {
         <div className="lab-loading"><Loader2 size={20} className="lab-spin" /> Loading the distribution…</div>
       )}
 
-      {prompt && result && (
+      {prompt && view === 'story' && (
+        <DecodeStory prompt={prompt} onOpenLab={() => setView('lab')} />
+      )}
+
+      {prompt && result && view === 'lab' && (
         <>
           <div className="dl-teaches">
             <div>

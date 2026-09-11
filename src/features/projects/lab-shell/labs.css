@@ -284,3 +284,157 @@
   background: var(--ice); color: var(--muted); font-size: 10px; font-weight: 700;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
+
+/* ── the beginner story ──────────────────────────────────────────────────────
+ * Deliberately unlike the rest of a lab: one idea per screen, large type, lots
+ * of air, and movement on entry. A lab's control panel is dense because its
+ * reader came to compare something. This reader is deciding whether to stay,
+ * so nothing may look like homework. */
+
+.lab-story { max-width: 760px; margin: 0 auto; padding: 4px 0 8px; }
+
+.lab-story-progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 22px; }
+.lab-story-dot {
+  width: 30px; height: 4px; padding: 0; border: 0; border-radius: 999px;
+  background: var(--line); cursor: pointer; transition: background .2s, transform .2s;
+}
+.lab-story-dot:hover { background: var(--periwinkle); }
+.lab-story-dot.done { background: #b9cdf5; }
+.lab-story-dot.active { background: var(--royal); transform: scaleY(1.8); }
+
+.lab-story-scene { animation: lab-story-enter .42s cubic-bezier(.2, .7, .3, 1); }
+@keyframes lab-story-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.lab-story-chapter {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+  border-radius: 999px; background: var(--ice); color: var(--royal);
+  font-size: 10.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+}
+.lab-story-scene h2 {
+  margin: 14px 0 0; color: var(--navy); font-size: 29px; line-height: 1.18; letter-spacing: -.02em;
+}
+.lab-story-lead {
+  margin: 12px 0 0; color: var(--lab-ink-2); font-size: 16px; line-height: 1.65; max-width: 62ch;
+}
+.lab-story-lead strong { color: var(--navy); }
+.lab-story-lead code, .lab-story-body code, .lab-story-caption code {
+  padding: 2px 7px; border-radius: 5px; background: var(--ice); color: var(--royal);
+  font-size: .9em; font-weight: 700;
+}
+.lab-story-body {
+  margin: 18px 0 0; color: var(--lab-ink-2); font-size: 14px; line-height: 1.75; max-width: 66ch;
+}
+.lab-story-visual {
+  margin: 26px 0 0; padding: 24px 22px; border: 1px solid var(--line);
+  border-radius: 16px; background: var(--white); box-shadow: 0 2px 16px rgba(26, 26, 46, .05);
+}
+.lab-story-caption {
+  margin: 14px 0 0; color: var(--lab-ink-2); font-size: 12.5px; line-height: 1.65; text-align: center;
+}
+
+.lab-story-maths { margin-top: 20px; }
+.lab-story-maths > button {
+  padding: 7px 14px; border: 1px dashed var(--line); border-radius: 999px;
+  background: none; color: var(--muted); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.lab-story-maths > button:hover { border-color: var(--royal); color: var(--royal); }
+.lab-story-maths-body {
+  margin-top: 11px; padding: 13px 15px; border-left: 3px solid var(--royal);
+  border-radius: 0 9px 9px 0; background: var(--ice);
+  animation: lab-story-enter .3s ease-out;
+}
+.lab-story-maths-body code {
+  display: block; color: var(--navy); font-size: 14px; font-weight: 700; white-space: pre-wrap;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.lab-story-maths-body p { margin: 8px 0 0; color: var(--lab-ink-2); font-size: 12px; line-height: 1.6; }
+
+.lab-story-nav {
+  display: flex; align-items: center; gap: 12px; margin-top: 26px;
+  padding-top: 18px; border-top: 1px solid var(--line);
+}
+.lab-story-back, .lab-story-next {
+  display: inline-flex; align-items: center; gap: 6px; padding: 11px 20px;
+  border-radius: 999px; font-size: 13.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.lab-story-back { border: 1px solid var(--line); background: var(--white); color: var(--navy); }
+.lab-story-back:disabled { opacity: .35; cursor: default; }
+.lab-story-next { border: 0; background: var(--royal); color: var(--white); margin-left: auto; }
+.lab-story-next:hover { filter: brightness(1.08); }
+.lab-story-count { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.lab-story-footer {
+  margin: 16px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.6; text-align: center;
+}
+
+/* ── pieces the individual lab stories reuse ────────────────────────────── */
+
+/* A row of coloured blocks — chunks, tokens, whatever the lab cuts things into */
+.lab-story-blocks { display: flex; flex-wrap: wrap; gap: 6px; }
+.lab-story-block {
+  padding: 9px 12px; border-radius: 9px; font-size: 12.5px; line-height: 1.5;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  animation: lab-story-rise .45s backwards cubic-bezier(.2, .8, .3, 1.2);
+}
+@keyframes lab-story-rise {
+  from { opacity: 0; transform: translateY(12px) scale(.94); } to { opacity: 1; transform: none; }
+}
+
+/* A labelled horizontal bar, for probabilities and scores */
+.lab-story-bars { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.lab-story-bars li {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr) 62px; gap: 12px; align-items: center;
+  animation: lab-story-rise .45s backwards cubic-bezier(.2, .8, .3, 1.2);
+}
+.lab-story-bars code {
+  padding: 6px 10px; border-radius: 7px; background: var(--ice); color: var(--navy);
+  font-size: 13px; font-weight: 700; text-align: center; overflow: hidden; text-overflow: ellipsis;
+  font-family: ui-monospace, monospace;
+}
+.lab-story-bars li.top code { background: var(--royal); color: var(--white); }
+.lab-story-bars li.cut code { opacity: .45; text-decoration: line-through; }
+.lab-story-bars div { height: 15px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.lab-story-bars i { display: block; height: 100%; background: var(--periwinkle); transition: width .35s ease-out; }
+.lab-story-bars li.top i { background: var(--royal); }
+.lab-story-bars li.cut i { background: var(--lab-grid); }
+.lab-story-bars em {
+  color: var(--lab-ink-2); font-size: 12.5px; font-style: normal;
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+
+/* A big single number, when one number is the whole point */
+.lab-story-big { text-align: center; }
+.lab-story-big strong {
+  display: block; color: var(--royal); font-size: 44px; font-weight: 800;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.lab-story-big span { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+
+/* Two things side by side, when the comparison is the lesson */
+.lab-story-versus {
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: stretch;
+}
+.lab-story-versus-side {
+  padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcff;
+}
+.lab-story-versus-side.good { border-color: #bfe3c8; background: #f2fbf4; }
+.lab-story-versus-side.bad { border-color: #f3d0d0; background: #fdf6f6; }
+.lab-story-versus-side h6 {
+  margin: 0 0 8px; color: var(--navy); font-size: 11px; font-weight: 900;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.lab-story-versus-mid {
+  display: grid; place-items: center; color: var(--muted); font-size: 12px; font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .lab-story-scene h2 { font-size: 22px; }
+  .lab-story-lead { font-size: 14.5px; }
+  .lab-story-visual { padding: 17px 14px; }
+  .lab-story-bars li { grid-template-columns: 74px minmax(0, 1fr) 52px; gap: 8px; }
+  .lab-story-versus { grid-template-columns: 1fr; }
+  .lab-story-versus-mid { padding: 4px; }
+}
