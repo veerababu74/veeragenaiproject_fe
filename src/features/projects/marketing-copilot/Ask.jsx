@@ -150,10 +150,12 @@ export default function Ask({ configured, onNeedSetup }) {
   const [conversationId, setConversationId] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [expanded, setExpanded] = useState('')
+  const [active, setActive] = useState(null)
   const endRef = useRef(null)
 
   useEffect(() => {
-    marketingApi('/suggestions').then((data) => setSuggestions(data.suggestions)).catch(() => {})
+    marketingApi('/examples').then((data) => setSuggestions(data.examples)).catch(() => {})
   }, [])
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [turns, busy])
@@ -186,21 +188,52 @@ export default function Ask({ configured, onNeedSetup }) {
     <div className="mc-ask">
       {turns.length === 0 && (
         <div className="mc-empty">
-          <h3>Ask it something</h3>
+          <h3>Pick a scenario</h3>
           <p>
-            Each of these takes a different path through the agent. The route it chose, and why,
-            is shown with every answer.
+            Each one takes a different path through the agent and makes a different point. Run them
+            in order and the picture builds: a lookup, a database query, the question that needs
+            both, a draft that gets checked, and one it should refuse.
           </p>
-          <div className="mc-suggestions">
-            {suggestions.map((item) => (
-              <button key={item.text} onClick={() => ask(item.text)} disabled={busy}>
-                <span className={`mc-route mc-route-${ROUTE_STYLE[item.route]?.tone || 'blue'}`}>
-                  {item.route}
-                </span>
-                <strong>{item.text}</strong>
-                <small>{item.note}</small>
-              </button>
-            ))}
+          <div className="mc-scenarios">
+            {suggestions.map((item) => {
+              const tone = ROUTE_STYLE[item.route]?.tone || 'blue'
+              const open = expanded === item.id
+              return (
+                <article className={`mc-scenario ${open ? 'open' : ''}`} key={item.id}>
+                  <div className="mc-scenario-head">
+                    <span className={`mc-route mc-route-${tone}`}>{item.route}</span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <small>{item.tagline}</small>
+                    </div>
+                    <span className="mc-scenario-tag">{item.difficulty}</span>
+                  </div>
+                  <p className="mc-scenario-shows">{item.what_it_shows}</p>
+                  <div className="mc-scenario-actions">
+                    <button className="mc-primary" disabled={busy}
+                            onClick={() => { setActive(item); ask(item.question) }}>
+                      Run this <Send size={13} />
+                    </button>
+                    <button className="mc-ghost"
+                            onClick={() => setExpanded(open ? '' : item.id)}>
+                      {open ? 'Hide' : 'What to look for'}
+                    </button>
+                  </div>
+                  {open && (
+                    <div className="mc-scenario-detail">
+                      <p><strong>The question:</strong> “{item.question}”</p>
+                      <p><Eye size={12} /> {item.look_for}</p>
+                      {item.follow_ups?.length > 0 && (
+                        <>
+                          <span className="mc-sublabel">then try</span>
+                          <ul>{item.follow_ups.map((q) => <li key={q}>“{q}”</li>)}</ul>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </article>
+              )
+            })}
           </div>
         </div>
       )}
@@ -219,6 +252,15 @@ export default function Ask({ configured, onNeedSetup }) {
         )}
         <div ref={endRef} />
       </div>
+
+      {active?.follow_ups?.length > 0 && turns.length > 0 && !busy && (
+        <div className="mc-followups">
+          <span className="mc-sublabel">try next</span>
+          {active.follow_ups.map((question) => (
+            <button key={question} onClick={() => ask(question)}>{question}</button>
+          ))}
+        </div>
+      )}
 
       {error && <p className="mc-error">{error}</p>}
 
