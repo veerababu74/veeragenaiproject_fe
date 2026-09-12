@@ -67,6 +67,9 @@ export default function ExamplesPanel() {
     setError('')
     setResult(null)
     try {
+      // Cleared here as well as asked for in the request: an older backend
+      // ignores the flag entirely, and the two together are idempotent.
+      if (replace) await wipeWorkspace()
       const response = await agentApi(`/examples/${example.id}/load`, {
         method: 'POST',
         body: JSON.stringify({ provider, model: model.trim(), api_key: apiKey.trim(), replace }),
@@ -110,15 +113,48 @@ export default function ExamplesPanel() {
       </div>
     )
   }
+  /* Empty the workspace, on whatever backend happens to be deployed.
+   *
+   * /examples/clear shipped after the examples themselves, so a backend can
+   * serve examples and not know how to clear them. Worse, that same backend
+   * ignores the `replace` flag on a load — Pydantic drops fields its model does
+   * not declare — so "replace what is there" silently became "merge into it",
+   * which is what made cleared graphs appear to come back.
+   *
+   * Deleting agents one by one uses DELETE /agents/{id}, which has existed from
+   * the beginning and cascades the connections and tool assignments that
+   * reference them. So the fallback works everywhere, and clearing no longer
+   * depends on a redeploy.
+   */
+  const wipeWorkspace = async () => {
+    try {
+      await agentApi('/examples/clear', { method: 'POST' })
+    } catch (requestError) {
+      if (!/404|not found/i.test(requestError.message)) throw requestError
+      const graph = await agentApi('/agents/graph')
+      for (const agent of graph.agents || []) {
+        await agentApi(`/agents/${agent.id}`, { method: 'DELETE' })
+      }
+      // Tools are not referenced by the agents any more, but they are still the
+      // example's, so leaving them behind would quietly accumulate duplicates.
+      try {
+        const tools = await agentApi('/tools')
+        for (const tool of tools || []) {
+          await agentApi(`/tools/${tool.id}`, { method: 'DELETE' })
+        }
+      } catch { /* tools are optional cleanup; the agents are what matter */ }
+    }
+  }
+
   const clearWorkspace = async () => {
     setClearing(true)
     setError('')
     try {
-      await agentApi('/examples/clear', { method: 'POST' })
+      await wipeWorkspace()
       await reloadGraph()
       setResult(null)
     } catch (requestError) {
-      setError(requestError.message)
+      setError(`Could not clear the workspace: ${requestError.message}`)
     }
     setClearing(false)
   }
