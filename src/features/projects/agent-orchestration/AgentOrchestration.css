@@ -408,3 +408,23 @@
   .ao-example-banner { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .ao-key-warn { margin-left: 0; }
 }
+
+/* What is already in the workspace, and the way out of it. */
+.ao-workspace-state {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 13px 16px; border: 1px solid #f0dcc0; border-radius: 13px;
+  background: linear-gradient(135deg, #fdf6ea, #fffdf9);
+}
+.ao-workspace-state > div { flex: 1; min-width: 200px; }
+.ao-workspace-count {
+  width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center;
+  border-radius: 10px; background: #a9700a; color: var(--white);
+  font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums;
+}
+.ao-workspace-state strong { color: #7a5210; font-size: 13px; }
+.ao-workspace-state p { margin: 3px 0 0; color: #8a6414; font-size: 11.5px; line-height: 1.55; }
+.ao-workspace-state .ao-ghost-button {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-color: #e6c89a; color: #7a5210; background: var(--white);
+}
+.ao-workspace-state .ao-ghost-button:hover { border-color: #b52d44; color: #b52d44; }

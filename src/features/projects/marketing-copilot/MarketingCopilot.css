@@ -617,3 +617,18 @@
   .mc-example-head .mc-route { grid-column: 1 / -1; justify-self: start; }
   .mc-example-tag { margin-left: 0; }
 }
+
+/* Setup: chat and embeddings are separate sections, so each gets a heading
+   that can carry its own "saved" state. */
+.mc-saved {
+  margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  background: #e6f2e6; color: var(--mc-good);
+  font-size: 9.5px; font-style: normal; font-weight: 800; letter-spacing: 0;
+  text-transform: none;
+}
+.mc-reuse {
+  display: flex; align-items: center; gap: 9px; margin-top: 12px;
+  color: var(--mc-ink-2); font-size: 12px; cursor: pointer;
+}
+.mc-reuse input { accent-color: var(--royal); }
+.mc-field input:disabled { background: var(--ice); color: var(--muted); cursor: not-allowed; }

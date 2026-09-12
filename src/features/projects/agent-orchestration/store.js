@@ -1,6 +1,30 @@
 import { create } from 'zustand'
+import { agentApi } from '../../../lib/agentApi'
 
 export const useAgentStore = create((set) => ({
+  /* Reloading the graph lives here rather than in the shell component.
+   *
+   * It used to be a local callback in AgentOrchestration that ran once on
+   * mount, which meant anything else changing the graph — loading an example,
+   * say — left the canvas showing stale state until the whole project was
+   * remounted. That is exactly the "my agents did not appear until I navigated
+   * away and back" bug. Any panel can call this now. */
+  reloadGraph: async () => {
+    const graph = await agentApi('/agents/graph')
+    set({
+      agents: (graph.agents || []).map((agent) => ({
+        ...agent,
+        tools: agent.tools || [],
+        connections: agent.connections || [],
+        is_sub_agent: Boolean(agent.is_sub_agent),
+      })),
+      connections: (graph.connections || []).map((c) => ({
+        ...c, condition: c.condition || c.condition_expr || '',
+      })),
+    })
+    return graph
+  },
+
   activeTab: 'examples', setActiveTab: (tab) => set({ activeTab: tab }),
   agents: [], connections: [], tools: [],
   selectedAgentId: null, setSelectedAgentId: (id) => set({ selectedAgentId: id }),

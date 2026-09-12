@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowRight, Check, KeyRound, Layers, Loader2, Play, Sparkles, Users, Wrench,
+  ArrowRight, Check, KeyRound, Layers, Loader2, Play, Sparkles, Trash2, Users, Wrench,
 } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
 import GraphShape from './GraphShape'
@@ -30,14 +30,15 @@ const MODE_COPY = {
 }
 
 export default function ExamplesPanel() {
-  const { setActiveTab } = useAgentStore()
+  const { setActiveTab, agents, reloadGraph } = useAgentStore()
   const [catalogue, setCatalogue] = useState(null)
   const [expanded, setExpanded] = useState('')
   const [provider, setProvider] = useState('openai')
   const [model, setModel] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [savedProviders, setSavedProviders] = useState([])
-  const [replace, setReplace] = useState(false)
+  const [replace, setReplace] = useState(true)
+  const [clearing, setClearing] = useState(false)
   const [loadingId, setLoadingId] = useState('')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -75,6 +76,9 @@ export default function ExamplesPanel() {
         setSavedProviders((current) => [...current, provider])
       }
       setApiKey('')
+      // Without this the canvas keeps showing whatever it had before, and the
+      // agents only appear after the project is remounted.
+      await reloadGraph()
     } catch (requestError) {
       setError(requestError.message)
     }
@@ -106,6 +110,19 @@ export default function ExamplesPanel() {
       </div>
     )
   }
+  const clearWorkspace = async () => {
+    setClearing(true)
+    setError('')
+    try {
+      await agentApi('/examples/clear', { method: 'POST' })
+      await reloadGraph()
+      setResult(null)
+    } catch (requestError) {
+      setError(requestError.message)
+    }
+    setClearing(false)
+  }
+
   if (error && !catalogue) {
     return <div className="agent-panel"><div className="agent-panel-content"><p className="agent-error">{error}</p></div></div>
   }
@@ -157,7 +174,14 @@ export default function ExamplesPanel() {
           <label className="ao-replace">
             <input type="checkbox" checked={replace}
                    onChange={(event) => setReplace(event.target.checked)} />
-            <span>Clear my existing agents first<em>otherwise the example loads alongside them</em></span>
+            <span>
+              Replace what is already there
+              <em>
+                {replace
+                  ? 'loading an example clears the workspace first — one at a time'
+                  : 'careful: the new example will be merged into the existing graph'}
+              </em>
+            </span>
           </label>
           {!hasKey && !apiKey.trim() && (
             <span className="ao-key-warn">
@@ -166,6 +190,25 @@ export default function ExamplesPanel() {
           )}
         </div>
       </div>
+
+      {agents.length > 0 && (
+        <div className="ao-workspace-state">
+          <span className="ao-workspace-count">{agents.length}</span>
+          <div>
+            <strong>You already have agents loaded</strong>
+            <p>
+              {replace
+                ? 'Loading another example will clear these first.'
+                : 'Loading another example will add to these, leaving two graphs side by side.'}
+            </p>
+          </div>
+          <button className="ao-ghost-button" onClick={clearWorkspace} disabled={clearing}>
+            {clearing
+              ? <><Loader2 size={13} className="agent-spin" /> Clearing…</>
+              : <><Trash2 size={13} /> Clear workspace</>}
+          </button>
+        </div>
+      )}
 
       {result && (
         <div className="ao-example-result">

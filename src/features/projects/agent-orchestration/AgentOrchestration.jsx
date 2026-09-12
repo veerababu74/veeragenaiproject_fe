@@ -25,15 +25,11 @@ const TABS = [
 ]
 
 export default function AgentOrchestration({ onBack }) {
-  const { activeTab, setActiveTab, setAgents, setConnections, agents, connections, selectedAgentId } = useAgentStore()
+  const { activeTab, setActiveTab, agents, connections, selectedAgentId, reloadGraph } = useAgentStore()
 
   const loadGraph = useCallback(async () => {
-    try {
-      const graph = await agentApi('/agents/graph')
-      setAgents((graph.agents || []).map((agent) => ({ ...agent, tools: agent.tools || [], connections: agent.connections || [], is_sub_agent: Boolean(agent.is_sub_agent) })))
-      setConnections((graph.connections || []).map((c) => ({ ...c, condition: c.condition || c.condition_expr || '' })))
-    } catch (requestError) { console.error(requestError) }
-  }, [setAgents, setConnections])
+    try { await reloadGraph() } catch (requestError) { console.error(requestError) }
+  }, [reloadGraph])
 
   useEffect(() => { loadGraph() }, [loadGraph])
 
