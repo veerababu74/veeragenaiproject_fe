@@ -41,8 +41,17 @@ export default function ExamplesPanel() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
+  const [unsupported, setUnsupported] = useState(false)
+
   useEffect(() => {
-    agentApi('/examples').then(setCatalogue).catch((e) => setError(e.message))
+    agentApi('/examples').then(setCatalogue).catch((requestError) => {
+      // The frontend can ship ahead of the backend — this panel went live in the
+      // same release as the endpoint it calls, and the two deploy separately. A
+      // 404 here is that skew, not a fault the reader can do anything about, so
+      // say which half is behind instead of showing them a raw error string.
+      if (/404|not found/i.test(requestError.message)) setUnsupported(true)
+      else setError(requestError.message)
+    })
     agentApi('/settings/llm-configs')
       .then((rows) => setSavedProviders(rows.map((row) => row.provider)))
       .catch(() => {})
@@ -71,6 +80,31 @@ export default function ExamplesPanel() {
     setLoadingId('')
   }
 
+  if (unsupported) {
+    return (
+      <div className="agent-panel">
+        <header className="agent-panel-header">
+          <h1>Examples</h1>
+          <p>Ready-made graphs, once this workspace's backend has them</p>
+        </header>
+        <div className="agent-panel-scroll"><div className="agent-panel-content">
+          <div className="ao-example-key">
+            <strong>The backend here does not serve examples yet.</strong>
+            <p className="agent-muted" style={{ marginTop: 8, lineHeight: 1.65 }}>
+              This panel and the endpoint it calls shipped together, but the frontend and the API
+              deploy separately — so the API is simply a release behind. Nothing is broken and
+              nothing you built is affected; everything else in the project works normally.
+              Redeploy the orchestration backend and the examples appear here.
+            </p>
+            <button className="agent-primary-button" style={{ marginTop: 12 }}
+                    onClick={() => setActiveTab('graph')}>
+              Build a graph by hand instead <ArrowRight size={15} />
+            </button>
+          </div>
+        </div></div>
+      </div>
+    )
+  }
   if (error && !catalogue) {
     return <div className="agent-panel"><div className="agent-panel-content"><p className="agent-error">{error}</p></div></div>
   }
