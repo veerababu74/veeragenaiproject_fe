@@ -3,6 +3,7 @@ import {
   ArrowRight, Check, KeyRound, Layers, Loader2, Play, Sparkles, Users, Wrench,
 } from 'lucide-react'
 import { agentApi } from '../../../lib/agentApi'
+import GraphShape from './GraphShape'
 import { PROVIDERS } from './providers'
 import { useAgentStore } from './store'
 
@@ -152,17 +153,18 @@ export default function ExamplesPanel() {
                    onChange={(event) => setApiKey(event.target.value)} />
           </label>
         </div>
-        <label className="ao-replace">
-          <input type="checkbox" checked={replace}
-                 onChange={(event) => setReplace(event.target.checked)} />
-          <span>Clear my existing agents first — otherwise the example loads alongside them</span>
-        </label>
-        {!hasKey && !apiKey.trim() && (
-          <p className="agent-muted">
-            <KeyRound size={12} /> You can load an example without a key, but it will not run until
-            one is saved.
-          </p>
-        )}
+        <div className="ao-key-foot">
+          <label className="ao-replace">
+            <input type="checkbox" checked={replace}
+                   onChange={(event) => setReplace(event.target.checked)} />
+            <span>Clear my existing agents first<em>otherwise the example loads alongside them</em></span>
+          </label>
+          {!hasKey && !apiKey.trim() && (
+            <span className="ao-key-warn">
+              <KeyRound size={12} /> Loads without a key — it just will not run until one is saved
+            </span>
+          )}
+        </div>
       </div>
 
       {result && (
@@ -186,26 +188,31 @@ export default function ExamplesPanel() {
           const mode = MODE_COPY[example.mode] || { label: example.mode, hint: '' }
           const open = expanded === example.id
           return (
-            <article className={`ao-example ${open ? 'open' : ''}`} key={example.id}>
-              <div className="ao-example-top">
-                <span className={`ao-mode ao-mode-${example.mode}`}>{mode.label}</span>
-                <span className="agent-muted">{mode.hint}</span>
+            <article className={`ao-example ao-example-${example.mode} ${open ? 'open' : ''}`}
+                     key={example.id}>
+              <div className="ao-example-banner">
+                <GraphShape mode={example.mode} workers={example.agents.length - 1} />
+                <div>
+                  <span className={`ao-mode ao-mode-${example.mode}`}>{mode.label}</span>
+                  <p className="ao-mode-hint">{mode.hint}</p>
+                </div>
               </div>
+
               <h3>{example.title}</h3>
               <p className="ao-example-tagline">{example.tagline}</p>
-
-              <div className="ao-example-agents">
-                <span className="ao-example-stat"><Users size={12} /> {example.agents.length} agents</span>
-                <span className="ao-example-stat"><Layers size={12} /> {example.connections} links</span>
-                {example.tools.length > 0 && (
-                  <span className="ao-example-stat"><Wrench size={12} /> {example.tools.join(', ')}</span>
-                )}
-              </div>
 
               <div className="ao-example-roster">
                 {example.agents.map((agent) => (
                   <span key={agent.name} className={agent.is_lead ? 'lead' : ''}>{agent.name}</span>
                 ))}
+              </div>
+
+              <div className="ao-example-agents">
+                <span className="ao-example-stat"><Users size={12} /> {example.agents.length}</span>
+                <span className="ao-example-stat"><Layers size={12} /> {example.connections}</span>
+                {example.tools.length > 0 && (
+                  <span className="ao-example-stat"><Wrench size={12} /> {example.tools.join(', ')}</span>
+                )}
               </div>
 
               <div className="ao-example-actions">
