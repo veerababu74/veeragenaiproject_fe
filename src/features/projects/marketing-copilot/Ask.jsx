@@ -143,7 +143,7 @@ function Answer({ message, onFeedback }) {
   )
 }
 
-export default function Ask({ configured, onNeedSetup }) {
+export default function Ask({ configured, onNeedSetup, pending, onPendingHandled }) {
   const [suggestions, setSuggestions] = useState([])
   const [question, setQuestion] = useState('')
   const [turns, setTurns] = useState([])
@@ -159,6 +159,14 @@ export default function Ask({ configured, onNeedSetup }) {
   }, [])
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [turns, busy])
+
+  // A scenario chosen on the Examples tab arrives here and runs itself once.
+  useEffect(() => {
+    if (!pending || busy) return
+    setActive(pending)
+    ask(pending.question)
+    onPendingHandled?.()
+  }, [pending]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const ask = async (text) => {
     const message = (text ?? question).trim()

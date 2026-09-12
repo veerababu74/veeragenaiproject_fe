@@ -235,3 +235,97 @@
   .agent-dialog-row, .agent-dialog-row.three { grid-template-columns: 1fr; }
   .agent-schema-row { grid-template-columns: 1fr; }
 }
+
+/* ── examples panel ─────────────────────────────────────────────────────── */
+
+.ao-examples { display: grid; gap: 14px; }
+
+.ao-example-key { padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: var(--white); }
+.ao-key-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 11px; }
+.ao-key-row label { display: flex; flex-direction: column; gap: 5px; }
+.ao-key-row label > span {
+  display: flex; align-items: center; gap: 6px; color: var(--muted);
+  font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+}
+.ao-key-row input, .ao-key-row select {
+  min-height: 34px; border: 1px solid var(--line); border-radius: 7px; padding: 0 10px;
+  background: var(--white); color: var(--navy); font-size: 12px; font-family: inherit;
+}
+.ao-key-saved {
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px;
+  background: #e6f7ec; color: #0f7a3d; font-size: 9px; font-style: normal; font-weight: 800;
+}
+.ao-replace {
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 11px;
+  color: var(--muted); font-size: 11.5px; line-height: 1.5; cursor: pointer;
+}
+.ao-replace input { margin-top: 2px; accent-color: var(--royal); }
+
+.ao-example-result {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 13px 15px; border: 1px solid #bfe0c8; border-radius: 11px; background: #f3fbf5;
+}
+.ao-example-result > div { flex: 1; min-width: 220px; }
+.ao-example-result strong { color: #0f7a3d; font-size: 13px; }
+.ao-example-result p { margin: 4px 0 0; color: var(--navy); font-size: 12px; line-height: 1.6; }
+
+.ao-look-for {
+  display: flex; align-items: flex-start; gap: 6px;
+  color: var(--royal) !important; font-size: 11.5px !important; line-height: 1.6;
+}
+.ao-look-for svg { flex: 0 0 auto; margin-top: 2px; }
+
+.ao-example-grid {
+  display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.ao-example {
+  display: flex; flex-direction: column; padding: 15px 16px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--white);
+  transition: border-color .15s, box-shadow .15s;
+}
+.ao-example:hover { border-color: #cfdcff; box-shadow: 0 6px 18px rgba(46, 76, 245, .07); }
+.ao-example.open { border-color: var(--royal); }
+.ao-example-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.ao-example h3 { margin: 10px 0 0; color: var(--navy); font-size: 15px; }
+.ao-example-tagline { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+/* One colour per orchestration mode — the mode is the point of each example. */
+.ao-mode {
+  padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 900;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.ao-mode-supervisor { background: #e9edff; color: var(--royal); }
+.ao-mode-sequential { background: #e7f6f2; color: #0b7a63; }
+.ao-mode-parallel { background: #f3e9ff; color: #6b3fd4; }
+.ao-mode-conditional { background: #fdf1dc; color: #a9700a; }
+
+.ao-example-agents { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 11px; }
+.ao-example-stat {
+  display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px;
+}
+.ao-example-roster { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.ao-example-roster span {
+  padding: 4px 9px; border-radius: 7px; background: var(--ice);
+  color: var(--navy); font-size: 11px;
+}
+.ao-example-roster span.lead { background: var(--royal); color: var(--white); font-weight: 700; }
+
+.ao-example-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 13px; }
+.ao-ghost-button {
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 13px;
+  background: var(--white); color: var(--navy); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.ao-ghost-button:hover { border-color: var(--royal); color: var(--royal); }
+
+.ao-example-detail {
+  margin-top: 12px; padding: 12px 13px; border-radius: 9px;
+  background: #fbfcff; border: 1px solid var(--line);
+}
+.ao-example-detail p { margin: 0 0 8px; color: var(--navy); font-size: 11.5px; line-height: 1.65; }
+.ao-detail-label {
+  display: block; margin: 4px 0 5px; color: var(--muted);
+  font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+}
+.ao-example-detail ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+.ao-example-detail li { color: var(--muted); font-size: 11.5px; line-height: 1.5; }

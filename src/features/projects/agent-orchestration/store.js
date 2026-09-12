@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 export const useAgentStore = create((set) => ({
-  activeTab: 'graph', setActiveTab: (tab) => set({ activeTab: tab }),
+  activeTab: 'examples', setActiveTab: (tab) => set({ activeTab: tab }),
   agents: [], connections: [], tools: [],
   selectedAgentId: null, setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setAgents: (agents) => set({ agents }),

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   Activity, ArrowLeft, BookOpen, FlaskConical, KeyRound, Loader2,
-  MessageSquare, Megaphone, ShieldCheck,
+  MessageSquare, Megaphone, ShieldCheck, Sparkles,
 } from 'lucide-react'
 import { marketingApi } from './api'
 import Ask from './Ask'
 import Compliance from './Compliance'
 import Corpus from './Corpus'
+import Examples from './Examples'
 import Evaluate from './Evaluate'
 import HowItWorks from './HowItWorks'
 import Setup from './Setup'
@@ -22,6 +23,9 @@ import Monitor from './Monitor'
 
 const TABS = [
   { id: 'setup', label: 'Setup', icon: KeyRound },
+  // Readable without a key, on purpose: someone deciding whether this is worth
+  // setting up should see what it does before going to find an API key.
+  { id: 'examples', label: 'Examples', icon: Sparkles },
   { id: 'ask', label: 'Ask', icon: MessageSquare },
   { id: 'corpus', label: 'Corpus', icon: BookOpen },
   { id: 'compliance', label: 'Compliance', icon: ShieldCheck },
@@ -47,7 +51,7 @@ export default function MarketingCopilot({ onBack }) {
       // Land people on Ask once the workspace is usable; Setup is a chore, not
       // a destination.
       if (setupData.configured && overviewData.corpus.chunks_indexed > 0) {
-        setTab((current) => (current === 'setup' ? 'ask' : current))
+        setTab((current) => (current === 'setup' ? 'examples' : current))
       }
     } catch (requestError) {
       setError(requestError.message)
@@ -58,6 +62,10 @@ export default function MarketingCopilot({ onBack }) {
   useEffect(() => { refresh() }, [refresh])
 
   const needSetup = () => setTab('setup')
+  // Picked in Examples, answered in Ask — the scenario is handed over rather
+  // than the chat being rebuilt in two places.
+  const [pending, setPending] = useState(null)
+  const runExample = (example) => { setPending(example); setTab('ask') }
 
   return (
     <section className="mc-app">
@@ -107,7 +115,13 @@ export default function MarketingCopilot({ onBack }) {
       <div className="mc-body">
         {loading && <div className="mc-loading"><Loader2 size={20} className="mc-spin" /> Loading…</div>}
         {!loading && tab === 'setup' && <Setup overview={overview} onConfigured={refresh} />}
-        {!loading && tab === 'ask' && <Ask configured={configured} onNeedSetup={needSetup} />}
+        {!loading && tab === 'examples' && (
+          <Examples configured={configured} onRun={runExample} onNeedSetup={needSetup} />
+        )}
+        {!loading && tab === 'ask' && (
+          <Ask configured={configured} onNeedSetup={needSetup}
+               pending={pending} onPendingHandled={() => setPending(null)} />
+        )}
         {!loading && tab === 'corpus' && <Corpus />}
         {!loading && tab === 'compliance' && <Compliance />}
         {!loading && tab === 'evaluate' && <Evaluate configured={configured} onNeedSetup={needSetup} />}
