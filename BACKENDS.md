@@ -97,6 +97,8 @@ One app, many projects, each mounted at `/<slug>`.
 |---|---|---|
 | `simpleagent` | SimpleAgent — one agent, ten tools, live tool-call trace | `src/features/projects/simple-agent/` |
 | `insidellm` | Inside an LLM — a real GPT-2 forward pass, component by component | `src/features/projects/inside-llm/` |
+| `marketingcopilot` | Marketing Copilot — RAG and an agent over a marketing team's material | `src/features/projects/marketing-copilot/` |
+| `interviewagent` | Live AI Interview — a spoken interview built from resume, GitHub and LinkedIn | `src/features/projects/interview-agent/` |
 
 `GET /health` lists what is mounted. The client is a factory:
 `createAgentsApi('simpleagent')`.
