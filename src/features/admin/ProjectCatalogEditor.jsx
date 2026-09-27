@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ImagePlus, Link2, Plus, Save, Trash2, Upload } from 'lucide-react'
+import { ChevronDown, ImagePlus, Link2, Plus, Save, Search, Trash2, Upload } from 'lucide-react'
 import { api } from '../../lib/api'
 
 const NEW_PROJECT = {
@@ -19,6 +19,10 @@ export default function ProjectCatalogEditor() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(null)
   const [message, setMessage] = useState('')
+  // One project open at a time. Every project expanded is a page of fifteen
+  // near-identical forms, which is why nothing in it could be found.
+  const [openId, setOpenId] = useState('')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     api('/admin/projects').then(setCatalog).catch((error) => setMessage(error.message))
@@ -72,6 +76,19 @@ export default function ProjectCatalogEditor() {
 
   if (!catalog) return <p className="editor-loading">Loading project catalog...</p>
   const categories = [...new Set(catalog.projects.map((project) => project.category).filter(Boolean))]
+  const term = search.trim().toLowerCase()
+  // The original index is carried through the filter: it is what every update
+  // writes against, so filtering on the mapped array would edit the wrong row.
+  const rows = catalog.projects
+    .map((project, index) => ({ project, index }))
+    .filter(({ project }) => !term
+      || `${project.title} ${project.id} ${project.category}`.toLowerCase().includes(term))
+
+  function addAndOpen() {
+    addProject()
+    setOpenId(NEW_PROJECT.id)
+    setSearch('')
+  }
 
   return <form className="landing-editor project-catalog-editor" onSubmit={save}>
     <div className="editor-intro"><div><span>PROJECT MANAGEMENT</span><h2>Project catalog</h2><p>Create and modify the projects shown after login and in the public portfolio.</p></div><ImagePlus size={30} /></div>
@@ -85,10 +102,24 @@ export default function ProjectCatalogEditor() {
       </div>
     </section>
     <section className="editor-section">
-      <header><div><span>02</span><h3>Projects</h3><p>{catalog.projects.length} configured</p></div><button className="editor-add" type="button" onClick={addProject}><Plus size={16} /> Add project</button></header>
+      <header><div><span>02</span><h3>Projects</h3><p>{catalog.projects.length} configured{term && ` · ${rows.length} matching`}</p></div><button className="editor-add" type="button" onClick={addAndOpen}><Plus size={16} /> Add project</button></header>
+      <label className="catalog-search"><Search size={16} /><input value={search} placeholder="Filter by title, id or category" onChange={(event) => setSearch(event.target.value)} /></label>
       <datalist id="project-categories">{categories.map((category) => <option key={category} value={category} />)}</datalist>
-      <div className="nested-list project-editor-list">{catalog.projects.map((project, index) => <article className="editor-item project-editor-item" key={project.id}>
-        <div className="editor-item-head"><strong>{project.title}</strong><button type="button" onClick={() => update('projects', catalog.projects.filter((_, projectIndex) => projectIndex !== index))} title="Remove project"><Trash2 size={16} /></button></div>
+      <div className="nested-list project-editor-list">{rows.map(({ project, index }) => {
+        const open = openId === project.id
+        return <article className={`editor-item project-editor-item ${open ? 'open' : ''}`} key={project.id}>
+        <div className="editor-item-head">
+          <button type="button" className="catalog-row-toggle" aria-expanded={open}
+                  onClick={() => setOpenId(open ? '' : project.id)}>
+            <ChevronDown size={15} className={open ? 'rotated' : ''} />
+            <strong>{project.title}</strong>
+            <span className={`catalog-row-status ${project.status}`}>{project.status.replace('-', ' ')}</span>
+            {!project.show_workspace && <span className="catalog-row-flag">hidden in workspace</span>}
+            {project.featured && <span className="catalog-row-flag featured">featured</span>}
+          </button>
+          <button type="button" onClick={() => update('projects', catalog.projects.filter((_, projectIndex) => projectIndex !== index))} title="Remove project"><Trash2 size={16} /></button>
+        </div>
+        {open && <>
         <div className="project-image-editor">
           <img src={project.image_url} alt={project.image_alt} />
           <div><strong>Project cover</strong><span>Upload JPEG, PNG, or WebP up to 8 MB, or paste an HTTPS URL.</span><label className="editor-upload"><Upload size={15} />{uploading === index ? 'Uploading...' : 'Upload from device'}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading !== null} onChange={(event) => uploadImage(event, project, index)} /></label></div>
@@ -111,7 +142,10 @@ export default function ProjectCatalogEditor() {
           <label><input type="checkbox" checked={project.show_public} onChange={(event) => updateProject(index, 'show_public', event.target.checked)} /><span>Also show in public portfolio</span></label>
           <label><input type="checkbox" checked={project.featured} onChange={(event) => updateProject(index, 'featured', event.target.checked)} /><span>Feature this project</span></label>
         </div>
-      </article>)}</div>
+        </>}
+      </article>})}
+      {rows.length === 0 && <p className="empty-state">No projects match that filter.</p>}
+      </div>
     </section>
     <div className="editor-save-bar">{message && <p className={message.includes('successfully') || message.includes('Cloudinary') ? 'success-text' : 'error-text'}>{message}</p>}<button disabled={saving || uploading !== null}><Save size={17} />{saving ? 'Publishing...' : 'Publish project catalog'}</button></div>
   </form>

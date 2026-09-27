@@ -28,6 +28,27 @@
 .project-access-list span { color: var(--navy); font-size: 10px; font-weight: 700; }
 .project-access-list label:has(input:disabled) { opacity: .65; cursor: not-allowed; }
 .empty-state { padding: 30px; border: 1px dashed var(--line); color: var(--muted); text-align: center; }
+
+/* Catalogue rows collapse, so the header is the whole row and has to read as
+   one: title, status, and the two flags an admin actually scans for. */
+.catalog-search { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; padding: 0 12px; min-height: 40px; border: 1px solid var(--line); border-radius: 6px; background: var(--white); color: var(--periwinkle); }
+.catalog-search:focus-within { border-color: var(--royal); box-shadow: 0 0 0 3px rgba(46,76,245,.1); }
+.catalog-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--navy); font: inherit; }
+.project-editor-item:not(.open) { padding: 0; background: var(--white); }
+.project-editor-item:not(.open) .editor-item-head { margin: 0; }
+.catalog-row-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 11px 4px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.catalog-row-toggle svg { flex: 0 0 auto; color: var(--periwinkle); transition: transform .18s ease; }
+.catalog-row-toggle svg.rotated { transform: rotate(180deg); color: var(--royal); }
+.catalog-row-toggle strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--navy); font-size: 13px; }
+.catalog-row-status { flex: 0 0 auto; padding: 3px 8px; border: 1px solid #d4dbf2; border-radius: 999px; color: #65708f; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.catalog-row-status.available { border-color: #b9c6ff; color: var(--royal); }
+.catalog-row-status.beta { border-color: #9bcfc3; color: #176657; }
+.catalog-row-flag { flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; background: #fdf1dc; color: #97690b; font-size: 9px; font-weight: 800; }
+.catalog-row-flag.featured { background: #e9edff; color: var(--royal); }
+@media (max-width: 620px) {
+  .catalog-row-flag { display: none; }
+}
+
 .landing-editor { display: grid; gap: 18px; padding-bottom: 90px; }
 .editor-intro { display: flex; align-items: center; justify-content: space-between; color: var(--royal); }
 .editor-intro span { color: var(--periwinkle); font-size: 11px; font-weight: 800; }

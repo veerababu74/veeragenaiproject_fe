@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react'
 import { BookOpen, FolderKanban, FolderKey, LayoutTemplate, Search, ShieldCheck, Users } from 'lucide-react'
 import { api } from '../../lib/api'
+import Pager from '../../components/Pager'
 import BlogEditor from './BlogEditor'
 import LandingEditor from './LandingEditor'
 import ProjectCatalogEditor from './ProjectCatalogEditor'
 import './AdminPanel.css'
 
+// Each row carries a checkbox per project, so a page of users is already a few
+// hundred controls. Ten keeps the DOM and the scroll length manageable.
+const USERS_PER_PAGE = 10
+
 export default function AdminPanel({ currentUser }) {
   const [users, setUsers] = useState([])
   const [projects, setProjects] = useState([])
   const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState('')
   const [view, setView] = useState('users')
@@ -39,6 +45,11 @@ export default function AdminPanel({ currentUser }) {
   const visibleUsers = users.filter((item) =>
     `${item.name} ${item.email}`.toLowerCase().includes(query.trim().toLowerCase()),
   )
+  const pageCount = Math.max(1, Math.ceil(visibleUsers.length / USERS_PER_PAGE))
+  // Clamped rather than reset, so deleting the last row of the last page does
+  // not leave the admin staring at an empty list.
+  const currentPage = Math.min(page, pageCount)
+  const pagedUsers = visibleUsers.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE)
 
   return <div className="admin-panel">
     <div className="admin-view-tabs">
@@ -49,13 +60,13 @@ export default function AdminPanel({ currentUser }) {
     </div>
     {view === 'landing' ? <LandingEditor /> : view === 'projects' ? <ProjectCatalogEditor /> : view === 'blog' ? <BlogEditor /> : <>
     <div className="admin-heading">
-      <div><span>ADMINISTRATION</span><h2>User access</h2><p>{users.length} registered users</p></div>
+      <div><span>ADMINISTRATION</span><h2>User access</h2><p>{users.length} registered users{query.trim() && ` · ${visibleUsers.length} matching`}</p></div>
       <ShieldCheck size={30} />
     </div>
-    <label className="admin-search">Search users<div className="input-wrap"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name or email" /></div></label>
+    <label className="admin-search">Search users<div className="input-wrap"><Search size={18} /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Name or email" /></div></label>
     {error && <p className="message error" role="alert">{error}</p>}
     <div className="user-list">
-      {visibleUsers.map((item) => <article className="user-row" key={item.id}>
+      {pagedUsers.map((item) => <article className="user-row" key={item.id}>
         <div className="user-summary">
           <div className="small-avatar">{item.name.charAt(0).toUpperCase()}</div>
           <div><strong>{item.name}</strong><span>{item.email}</span><small>{item.role} · {item.provider}</small></div>
@@ -78,6 +89,8 @@ export default function AdminPanel({ currentUser }) {
       </article>)}
       {!visibleUsers.length && <p className="empty-state">No users match your search.</p>}
     </div>
+    <Pager page={currentPage} pageCount={pageCount} total={visibleUsers.length}
+           noun="users" onChange={setPage} />
     </>}
   </div>
 }

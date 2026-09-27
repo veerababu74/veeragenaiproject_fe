@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import {
   AlignLeft, BookOpen, ChevronDown, ChevronUp, Code2, Columns2,
   Heading1, Heading2, Heading3, Image, List, ListOrdered,
-  Minus, Plus, Save, Send, Trash2, Upload, X,
+  Minus, Plus, Save, Search, Send, Trash2, Upload, X,
 } from 'lucide-react'
 import { api } from '../../lib/api'
 import './BlogEditor.css'
@@ -280,6 +280,7 @@ const NEW_POST_TEMPLATE = {
 ---------------------------------------------------------------- */
 export default function BlogEditor() {
   const [posts, setPosts] = useState([])
+  const [postFilter, setPostFilter] = useState('')
   const [selectedSlug, setSelectedSlug] = useState(null)
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -467,6 +468,12 @@ export default function BlogEditor() {
     { type: 'divider', icon: <Minus size={13} />, label: 'Divider' },
   ]
 
+  const filterTerm = postFilter.trim().toLowerCase()
+  const filteredPosts = filterTerm
+    ? posts.filter((post) => `${post.title} ${post.slug} ${(post.tags || []).join(' ')}`
+        .toLowerCase().includes(filterTerm))
+    : posts
+
   return (
     <div className="blog-editor-shell">
       {/* Sidebar */}
@@ -477,8 +484,15 @@ export default function BlogEditor() {
             <Plus size={13} /> New post
           </button>
         </div>
+        {/* Every post from every page is loaded into this list, so it only gets
+            longer. A filter is the difference between a picker and a scroll. */}
+        <label className="blog-editor-filter">
+          <Search size={14} />
+          <input value={postFilter} placeholder={`Filter ${posts.length} posts`}
+                 onChange={(event) => setPostFilter(event.target.value)} />
+        </label>
         <div className="blog-editor-post-list">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <button
               key={post.slug}
               className={`blog-editor-post-item ${selectedSlug === post.slug ? 'active' : ''}`}
@@ -493,9 +507,9 @@ export default function BlogEditor() {
               </div>
             </button>
           ))}
-          {!posts.length && (
+          {!filteredPosts.length && (
             <p style={{ fontSize: '0.8rem', color: 'var(--muted)', padding: '1rem', textAlign: 'center' }}>
-              No posts yet. Create one →
+              {posts.length ? 'No posts match that filter.' : 'No posts yet. Create one →'}
             </p>
           )}
         </div>

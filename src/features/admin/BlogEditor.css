@@ -58,6 +58,30 @@
   color: var(--white);
 }
 
+.blog-editor-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0.5rem;
+  padding: 0 10px;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--periwinkle);
+}
+.blog-editor-filter:focus-within { border-color: var(--royal); box-shadow: 0 0 0 3px rgba(46, 76, 245, .1); }
+.blog-editor-filter input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
 .blog-editor-post-list {
   flex: 1;
   overflow-y: auto;

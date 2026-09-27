@@ -1,0 +1,31 @@
+.pager {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+.pager button {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--navy);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pager button:hover:not(:disabled) { border-color: var(--royal); color: var(--royal); }
+.pager button:disabled { opacity: .45; cursor: not-allowed; }
+.pager span { color: var(--muted); font-size: 12px; text-align: center; }
+.pager strong { color: var(--navy); }
+
+@media (max-width: 430px) {
+  .pager { gap: 8px; }
+  /* Icon-only at this width: the labels are what overflow, not the controls. */
+  .pager button { width: 38px; padding: 0; justify-content: center; font-size: 0; }
+}
