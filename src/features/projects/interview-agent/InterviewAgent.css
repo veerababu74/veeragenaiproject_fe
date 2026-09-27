@@ -189,6 +189,8 @@
 .ia-field-row label > span, .ia-key-field > span {
   display: block; margin-bottom: 4px; color: var(--navy); font-size: 11.5px; font-weight: 800;
 }
+.ia-field-row label > span em { color: var(--muted); font-style: normal; font-weight: 600; }
+.ia-app input:disabled { background: var(--ice); color: var(--muted); cursor: not-allowed; }
 .ia-key-field em { color: var(--ia-good); font-style: normal; font-weight: 700; }
 .ia-inline-form { display: flex; gap: 8px; align-items: flex-start; }
 .ia-inline-form input { flex: 1; }

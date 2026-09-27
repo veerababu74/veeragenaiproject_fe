@@ -17,7 +17,7 @@ import { interviewApi } from './api'
  * actually loses people.
  */
 
-function ProviderCard({ icon: Icon, title, subtitle, required, configured, catalog,
+function ProviderCard({ icon: Icon, slug, title, subtitle, required, configured, catalog,
                         provider, onProvider, model, onModel, voice, onVoice,
                         apiKey, onApiKey, keyHint }) {
   const [open, setOpen] = useState(false)
@@ -48,22 +48,32 @@ function ProviderCard({ icon: Icon, title, subtitle, required, configured, catal
 
       {active.note && <p className="ia-muted ia-provider-note">{active.note}</p>}
 
-      <div className="ia-field-row">
-        <label>
-          <span>Model</span>
-          <select value={model} onChange={(event) => onModel(event.target.value)}>
-            {(active.models || []).map((name) => <option key={name} value={name}>{name}</option>)}
-          </select>
-        </label>
-        {onVoice && (active.voices || []).length > 0 && (
+      {/* Free text with a suggestion list, not a dropdown: providers deprecate
+          model names and ship new ones between releases of this project. */}
+      {!keyless && (
+        <div className="ia-field-row">
           <label>
-            <span>Voice</span>
-            <select value={voice} onChange={(event) => onVoice(event.target.value)}>
-              {active.voices.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-            </select>
+            <span>Model</span>
+            <input list={`${slug}-models`} value={model} spellCheck={false}
+                   placeholder={active.models?.[0]}
+                   onChange={(event) => onModel(event.target.value)} />
+            <datalist id={`${slug}-models`}>
+              {(active.models || []).map((name) => <option key={name} value={name} />)}
+            </datalist>
           </label>
-        )}
-      </div>
+          {onVoice && (
+            <label>
+              <span>Voice {(active.voices || []).length === 0 && <em>set by the model name</em>}</span>
+              <input list={`${slug}-voices`} value={voice} spellCheck={false}
+                     placeholder={active.voices?.[0]?.id || 'chosen by the model'}
+                     disabled={(active.voices || []).length === 0}
+                     onChange={(event) => onVoice(event.target.value)} />
+              <datalist id={`${slug}-voices`}>
+                {(active.voices || []).map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>))}
+              </datalist>
+            </label>)}
+        </div>)}
 
       {!keyless && (
         <label className="ia-key-field">
@@ -147,6 +157,7 @@ export default function Setup({ setup, onSaved }) {
       <div className="ia-card ia-intro">
         <h3><KeyRound size={15} /> Three jobs, three keys</h3>
         <p>{catalog.note}</p>
+        <p className="ia-note">{catalog.models_note}</p>
         <p className="ia-muted">
           Keys are stored against your account and are never sent back to this page — only the last
           four characters, so you can tell which one is saved. Everything is deleted automatically
@@ -155,6 +166,7 @@ export default function Setup({ setup, onSaved }) {
       </div>
 
       <ProviderCard icon={BrainCircuit}
+                    slug="chat"
                     title="1. The model that interviews you"
                     subtitle="Writes the plan, grades every answer and produces the report. This is the only key you actually need."
                     required
@@ -166,6 +178,7 @@ export default function Setup({ setup, onSaved }) {
                     keyHint={setup.chat_key_hint} />
 
       <ProviderCard icon={Ear}
+                    slug="stt"
                     title="2. The model that hears you"
                     subtitle="Turns your spoken answer into the transcript that gets graded. The browser does this free and badly; a hosted Whisper does it properly."
                     configured={setup.stt_configured}
@@ -176,6 +189,7 @@ export default function Setup({ setup, onSaved }) {
                     keyHint={setup.stt_key_hint} />
 
       <ProviderCard icon={Mic2}
+                    slug="tts"
                     title="3. The voice that asks"
                     subtitle="Reads each question out loud. Rehearsing against a real-sounding voice is most of the value of practising out loud at all."
                     configured={setup.tts_configured}
