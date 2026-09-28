@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, ImagePlus, Link2, Plus, Save, Search, Trash2, Upload } from 'lucide-react'
 import { api } from '../../lib/api'
+import Pager from '../../components/Pager'
+
+// Each expanded project is a tall form, so a page of them turns the catalog
+// into an endless scroll. Eight keeps the list a picker rather than a page.
+const PROJECTS_PER_PAGE = 8
 
 const NEW_PROJECT = {
   id: 'new-project', title: 'New project', summary: 'Describe what you built and why it matters.',
@@ -23,6 +28,7 @@ export default function ProjectCatalogEditor() {
   // near-identical forms, which is why nothing in it could be found.
   const [openId, setOpenId] = useState('')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     api('/admin/projects').then(setCatalog).catch((error) => setMessage(error.message))
@@ -83,11 +89,17 @@ export default function ProjectCatalogEditor() {
     .map((project, index) => ({ project, index }))
     .filter(({ project }) => !term
       || `${project.title} ${project.id} ${project.category}`.toLowerCase().includes(term))
+  const pageCount = Math.max(1, Math.ceil(rows.length / PROJECTS_PER_PAGE))
+  // Clamped rather than reset, so removing the last row of the last page does
+  // not strand the admin on an empty page.
+  const currentPage = Math.min(page, pageCount)
+  const pagedRows = rows.slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE)
 
   function addAndOpen() {
     addProject()
     setOpenId(NEW_PROJECT.id)
     setSearch('')
+    setPage(1)
   }
 
   return <form className="landing-editor project-catalog-editor" onSubmit={save}>
@@ -103,9 +115,9 @@ export default function ProjectCatalogEditor() {
     </section>
     <section className="editor-section">
       <header><div><span>02</span><h3>Projects</h3><p>{catalog.projects.length} configured{term && ` · ${rows.length} matching`}</p></div><button className="editor-add" type="button" onClick={addAndOpen}><Plus size={16} /> Add project</button></header>
-      <label className="catalog-search"><Search size={16} /><input value={search} placeholder="Filter by title, id or category" onChange={(event) => setSearch(event.target.value)} /></label>
+      <label className="catalog-search"><Search size={16} /><input value={search} placeholder="Filter by title, id or category" onChange={(event) => { setSearch(event.target.value); setPage(1) }} /></label>
       <datalist id="project-categories">{categories.map((category) => <option key={category} value={category} />)}</datalist>
-      <div className="nested-list project-editor-list">{rows.map(({ project, index }) => {
+      <div className="nested-list project-editor-list">{pagedRows.map(({ project, index }) => {
         const open = openId === project.id
         return <article className={`editor-item project-editor-item ${open ? 'open' : ''}`} key={project.id}>
         <div className="editor-item-head">
@@ -146,6 +158,7 @@ export default function ProjectCatalogEditor() {
       </article>})}
       {rows.length === 0 && <p className="empty-state">No projects match that filter.</p>}
       </div>
+      <Pager page={currentPage} pageCount={pageCount} total={rows.length} noun="projects" onChange={setPage} />
     </section>
     <div className="editor-save-bar">{message && <p className={message.includes('successfully') || message.includes('Cloudinary') ? 'success-text' : 'error-text'}>{message}</p>}<button disabled={saving || uploading !== null}><Save size={17} />{saving ? 'Publishing...' : 'Publish project catalog'}</button></div>
   </form>

@@ -5,6 +5,7 @@ import {
   Minus, Plus, Save, Search, Send, Trash2, Upload, X,
 } from 'lucide-react'
 import { api } from '../../lib/api'
+import Pager from '../../components/Pager'
 import './BlogEditor.css'
 
 /* ----------------------------------------------------------------
@@ -281,6 +282,7 @@ const NEW_POST_TEMPLATE = {
 export default function BlogEditor() {
   const [posts, setPosts] = useState([])
   const [postFilter, setPostFilter] = useState('')
+  const [postPage, setPostPage] = useState(1)
   const [selectedSlug, setSelectedSlug] = useState(null)
   const [draft, setDraft] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -473,6 +475,10 @@ export default function BlogEditor() {
     ? posts.filter((post) => `${post.title} ${post.slug} ${(post.tags || []).join(' ')}`
         .toLowerCase().includes(filterTerm))
     : posts
+  const POSTS_PER_PAGE = 12
+  const postPageCount = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE))
+  const currentPostPage = Math.min(postPage, postPageCount)
+  const pagedPosts = filteredPosts.slice((currentPostPage - 1) * POSTS_PER_PAGE, currentPostPage * POSTS_PER_PAGE)
 
   return (
     <div className="blog-editor-shell">
@@ -489,10 +495,10 @@ export default function BlogEditor() {
         <label className="blog-editor-filter">
           <Search size={14} />
           <input value={postFilter} placeholder={`Filter ${posts.length} posts`}
-                 onChange={(event) => setPostFilter(event.target.value)} />
+                 onChange={(event) => { setPostFilter(event.target.value); setPostPage(1) }} />
         </label>
         <div className="blog-editor-post-list">
-          {filteredPosts.map((post) => (
+          {pagedPosts.map((post) => (
             <button
               key={post.slug}
               className={`blog-editor-post-item ${selectedSlug === post.slug ? 'active' : ''}`}
@@ -512,6 +518,10 @@ export default function BlogEditor() {
               {posts.length ? 'No posts match that filter.' : 'No posts yet. Create one →'}
             </p>
           )}
+        </div>
+        <div className="blog-editor-pager">
+          <Pager page={currentPostPage} pageCount={postPageCount} total={filteredPosts.length}
+                 noun="posts" onChange={setPostPage} />
         </div>
       </aside>
 
