@@ -8,8 +8,9 @@ import ProjectCatalogEditor from './ProjectCatalogEditor'
 import './AdminPanel.css'
 
 // Each row carries a checkbox per project, so a page of users is already a few
-// hundred controls. Ten keeps the DOM and the scroll length manageable.
-const USERS_PER_PAGE = 10
+// hundred controls. Five keeps the DOM light and the pager useful even with a
+// small user count.
+const USERS_PER_PAGE = 5
 
 export default function AdminPanel({ currentUser }) {
   const [users, setUsers] = useState([])

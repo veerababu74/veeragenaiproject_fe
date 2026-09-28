@@ -91,7 +91,7 @@
 .editor-item { padding: 15px; border: 1px solid var(--line); border-radius: 6px; background: #fafbff; }
 .editor-item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
 .editor-item-head strong { color: var(--navy); font-size: 12px; }
-.editor-item-head button { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: #fff0f1; color: #9f2434; }
+.editor-item-head button:not(.catalog-row-toggle) { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: #fff0f1; color: #9f2434; }
 .editor-add { min-height: 36px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 12px; border: 1px solid #cbd6ff; border-radius: 5px; background: var(--ice); color: var(--royal); font-weight: 700; }
 .editor-section > .editor-add { margin-top: 14px; }
 .editor-save-bar { position: sticky; z-index: 3; bottom: 14px; display: flex; align-items: center; justify-content: flex-end; gap: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.95); box-shadow: 0 12px 32px rgba(26,26,46,.12); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }

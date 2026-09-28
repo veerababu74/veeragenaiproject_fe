@@ -84,6 +84,7 @@
 
 .blog-editor-post-list {
   flex: 1;
+  max-height: 520px;
   overflow-y: auto;
   padding: 0.5rem;
   scrollbar-width: thin;
